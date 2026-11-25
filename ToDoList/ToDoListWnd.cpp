@@ -419,6 +419,8 @@ BEGIN_MESSAGE_MAP(CToDoListWnd, CFrameWnd)
 	ON_CBN_EDITCHANGE(IDC_QUICKFIND, OnEditChangeQuickFind)
 	ON_CBN_SELCHANGE(IDC_QUICKFIND, OnSelChangeQuickFind)
 	ON_COMMAND(ID_ABOUT, OnAbout)
+	ON_COMMAND(ID_ABOUT_LICENSE, OnAboutLicense)
+	ON_COMMAND(ID_ABOUT_SOURCE, OnAboutSource)
 	ON_COMMAND(ID_ADDTIMETOLOGFILE, OnAddtimetologfile)
 	ON_COMMAND(ID_ADDTIMETOLOGFILE, OnAddtimetologfile)
 	ON_COMMAND(ID_ARCHIVE_COMPLETEDTASKS, OnArchiveCompletedtasks)
@@ -4716,6 +4718,16 @@ void CToDoListWnd::OnAbout()
 	CTDLAboutDlg dialog(GetTitle());
 	
 	dialog.DoModal();
+}
+
+void CToDoListWnd::OnAboutLicense() 
+{
+	CTDLAboutDlg::OpenLicenseFile(this);
+}
+
+void CToDoListWnd::OnAboutSource() 
+{
+	CTDLAboutDlg::OpenSourcePage(this);
 }
 
  

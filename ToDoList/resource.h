@@ -685,6 +685,10 @@
 #define IDC_CONTRIBUTORS                1458
 #define IDC_TITLE                       1459
 #define IDC_LICENSE                     1460
+#define IDC_3RDPARTY                    1461
+#define IDC_OPENLICENSE                 1462
+#define IDC_OPENSOURCE                  1463
+#define IDC_COPYINFO                    1464
 #define IDC_CHkMail                     1462
 #define IDC_COLLAPSEEDITPANEL           1464
 #define ID_DELETETASK                   32772
@@ -712,6 +716,8 @@
 #define ID_TRAYICON                     32819
 #define ID_LOAD_NORMAL                  32822
 #define ID_ABOUT                        32827
+#define ID_ABOUT_LICENSE                32860
+#define ID_ABOUT_SOURCE                 32861
 #define ID_PREFERENCES                  32828
 #define ID_MAXTASKLIST                  32836
 #define ID_OPEN_RELOAD                  32837
@@ -1958,6 +1964,7 @@
 #define IDS_TDC_EDITPROMPT_EQUIPMENT    58414
 #define IDS_TDC_FIELD_Amount            58415
 #define IDS_TDC_EDITPROMPT_Amount       58416
+#define IDS_ABOUT_PARTIES              58417
 
 // Next default values for new objects
 // 

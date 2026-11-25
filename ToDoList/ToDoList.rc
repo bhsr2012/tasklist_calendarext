@@ -66,7 +66,7 @@ IDB_BlackICONS          BITMAP                  "res\\icons256.bmp"
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
-#pragma code_page(1252)
+#pragma code_page(936)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1438,21 +1438,26 @@ BEGIN
     LTEXT           "Default Attribute Visibility for New Tasklists",IDC_LISTLABEL,7,7,380,8
 END
 
-IDD_ABOUT_DIALOG DIALOG 0, 0, 297, 209
+IDD_ABOUT_DIALOG DIALOG 0, 0, 420, 342
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About"
+CAPTION "关于 TaskList"
 FONT 8, "Tahoma"
 BEGIN
-    DEFPUSHBUTTON   "Close",IDOK,239,188,50,14
-    CONTROL         "List1",IDC_CONTRIBUTORS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,8,45,281,110
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,185,296,1
-    ICON            110,IDC_STATIC,8,8,21,20
-    ICON            278,IDC_STATIC,267,8,21,20
-    LTEXT           "Static",IDC_TITLE,34,7,230,8
-    LTEXT           "Static",IDC_LICENSE,8,157,281,26
-    LTEXT           "A simple and effective way to keep on top of your daily tasks",IDC_STATIC,34,20,231,8
-    LTEXT           "Contributors:",IDC_STATIC,8,33,250,8
-    CONTROL         "",IDC_TOOLBAR,"Static",SS_BLACKFRAME | NOT WS_VISIBLE | WS_DISABLED,8,188,108,14
+    DEFPUSHBUTTON   "关闭",IDOK,317,320,96,15
+    ICON            110,IDC_STATIC,7,7,21,20
+    LTEXT           "Static",IDC_TITLE,34,9,370,10
+    LTEXT           "基于 ToDoList 7.0.11 (AbstractSpoon Software)，本版本含修改",IDC_STATIC,34,23,370,9
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,37,420,1
+    GROUPBOX        "许可与源代码 (Licence and source code)",IDC_STATIC,7,42,406,92
+    CONTROL         "Static",IDC_LICENSE,"Static",WS_BORDER | WS_TABSTOP,12,55,396,73
+    GROUPBOX        "第三方组件 (Third-party components)",IDC_STATIC,7,139,406,62
+    CONTROL         "Static",IDC_3RDPARTY,"Static",WS_BORDER | WS_TABSTOP,12,151,396,44
+    GROUPBOX        "贡献者 (Contributors)",IDC_STATIC,7,206,406,94
+    CONTROL         "List1",IDC_CONTRIBUTORS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,12,218,396,74
+    LTEXT           "本程序按原样提供，不附带任何担保。Provided as is, without warranty of any kind.",IDC_STATIC,7,310,406,9
+    PUSHBUTTON      "许可证文件(&L)...",IDC_OPENLICENSE,7,320,96,15
+    PUSHBUTTON      "源代码页(&S)...",IDC_OPENSOURCE,107,320,96,15
+    PUSHBUTTON      "复制信息(&C)",IDC_COPYINFO,207,320,96,15
 END
 
 
@@ -2645,6 +2650,13 @@ BEGIN
         MENUITEM "Window 15",                   ID_WINDOW15, GRAYED
         MENUITEM "Window 16",                   ID_WINDOW16, GRAYED
     END
+    POPUP "关于(&A)"
+    BEGIN
+        MENUITEM "版本与合规信息(&A)...",           ID_ABOUT
+        MENUITEM SEPARATOR
+        MENUITEM "许可证全文 EPL-1.0(&L)...",       ID_ABOUT_LICENSE
+        MENUITEM "获取本版本源代码(&S)...",          ID_ABOUT_SOURCE
+    END
 END
 
 IDR_MISC MENU
@@ -3190,9 +3202,9 @@ BEGIN
 
     IDD_ABOUT_DIALOG, DIALOG
     BEGIN
-        RIGHTMARGIN, 296
+        RIGHTMARGIN, 413
         TOPMARGIN, 7
-        BOTTOMMARGIN, 193
+        BOTTOMMARGIN, 335
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -3712,7 +3724,8 @@ BEGIN
                             "Are you sure you want to export the active tasklist to '%s'?"
     IDS_BADPLUGINVERSIONS   "One or more plugins that provide enhanced comments functionality are out of date.\n\nClick OK to continue, in which case you may not be able to edit a task's comments, \nor click Cancel to close ToDoList, to allow you to update the plugins before restarting."
     IDS_BADPLUGINTITLE      "Plugins Out of Date"
-    IDS_LICENSE             "ToDoList is freeware licensed under an <a href=%s>Eclipse Public License 1.0</a>.<BR>This build contains modifications. The modified source is published under the same licence at:<BR><a href=%s>%s</a>"
+    IDS_LICENSE             "本程序基于 ToDoList 7.0.11（Copyright (c) 2003-2015 AbstractSpoon Software），按 <a href=%s>Eclipse Public License 1.0</a> 发布。<BR>本版本含修改；依 EPL-1.0 第 3 条，全部修改文件的完整源代码见：<BR>%s<BR>安装目录内附有 LICENSE-EPL-1.0.txt（许可全文）与 NOTICE.md（修改清单与第三方声明）。<BR>修改由本部署的维护者完成，与原版权人无关。"
+    IDS_ABOUT_PARTIES       "CalendarExt / GanttChartExt / StatisticsExt：Eclipse Public License 1.0。MySpell 与 OpenOffice 词典（MySpellCheck.dll）：BSD 风格许可。zlib 1.1.4：zlib 许可。其余 3rdParty 源码（rijndael 公有领域、sha2 BSD 风格、XHTMLStatic、MemDC、PixieLib、ColourPicker 等）保留各自文件头部的版权与许可声明。"
     IDS_NOWUW               "Before you can download updates you need to install the Web Update Wizard component (and then try again).\n\nWould you like to download the Web Update Wizard now?"
 END
 
@@ -4313,7 +4326,7 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE 9, 1
-#pragma code_page(1252)
+#pragma code_page(936)
 #endif //_WIN32
 #include "res\ToDoList.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components

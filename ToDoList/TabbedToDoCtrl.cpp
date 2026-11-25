@@ -63,6 +63,7 @@ CTabbedToDoCtrl::CTabbedToDoCtrl(CUIExtensionMgr& mgrUIExt, CContentMgr& mgrCont
 	m_bUpdatingExtensions(FALSE),
 	m_bExtModifyingApp(FALSE),
 	m_mgrUIExt(mgrUIExt),
+	m_bTasksSnapshotValid(FALSE),
 	m_taskList(m_ilTaskIcons, m_data, m_taskTree.Find(), m_aStyles, m_visColAttrib.GetVisibleColumns(), m_aCustomAttribDefs)
 {
 	// add extra controls to implement list-view
@@ -129,6 +130,13 @@ void CTabbedToDoCtrl::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_FTC_TABCTRL, m_tabViews);
 }
 
+void CTabbedToDoCtrl::InvalidateTaskSnapshot(const char* szFrom)
+{
+	if (TdlPEnabled())
+		TdlPLog(szFrom && *szFrom ? szFrom : "   SN:invalidate", TdlPNow());
+	m_bTasksSnapshotValid = FALSE;
+}
+
 BOOL CTabbedToDoCtrl::OnInitDialog()
 {
 	CToDoCtrl::OnInitDialog();
@@ -144,7 +152,13 @@ BOOL CTabbedToDoCtrl::OnInitDialog()
 
 	// add tree and list as tabbed views
 	m_tabViews.AttachView(m_taskTree.GetSafeHwnd(), FTCV_TASKTREE, CEnString(IDS_TASKTREE), GraphicsMisc::LoadIcon(IDI_TASKTREE_STD), NULL);
+	// The list view duplicated the task tree row for row, so its tab is
+	// no longer shown and FTCV_TASKLIST is redirected to FTCV_TASKTREE
+	// in SetView(). The view stays registered so that the per-view data
+	// it owns remains valid for the code that still refers to it.
 	m_tabViews.AttachView(m_taskList, FTCV_TASKLIST, CEnString(IDS_LISTVIEW), GraphicsMisc::LoadIcon(IDI_LISTVIEW_STD), NewViewData());
+	m_tabViews.ShowViewTab(FTCV_TASKLIST, FALSE);
+
 
 	for (int nExt = 0; nExt < m_mgrUIExt.GetNumUIExtensions(); nExt++)
 		AddView(m_mgrUIExt.GetUIExtension(nExt));
@@ -484,6 +498,8 @@ IUIExtensionWindow* CTabbedToDoCtrl::GetExtensionWnd(FTC_VIEW nView, BOOL bAutoC
 	}
 	
 	// initialize update state
+	// Creating a view does not change the task data, so the shared
+	// snapshot stays valid and the new view can consume it directly.
 	pData->bNeedTaskUpdate = TRUE;
 
 	// and capabilities
@@ -624,10 +640,16 @@ LRESULT CTabbedToDoCtrl::OnPreTabViewChange(WPARAM nOldView, LPARAM nNewView)
 				if (nProgressMsg == 0)
 					BeginExtensionProgress(pData);
 
-				CTaskFile tasks;
-				{ LONGLONG _t = TdlPNow(); GetAllTasks(tasks); TdlPLog("   DT:GetAllTasks", _t); }
-				
-				{ LONGLONG _t = TdlPNow(); UpdateExtensionView(pExtWnd, tasks, IUI_ALL); TdlPLog("   DT:UpdateExt", _t); }
+				// Reuse the snapshot unless the task data changed since it was built
+				if (!m_bTasksSnapshotValid)
+				{
+					m_tasksSnapshot.Reset();
+
+					{ LONGLONG _t = TdlPNow(); GetAllTasks(m_tasksSnapshot); TdlPLog("   DT:GetAllTasks", _t); }
+					m_bTasksSnapshotValid = TRUE;
+				}
+
+				{ LONGLONG _t = TdlPNow(); UpdateExtensionView(pExtWnd, m_tasksSnapshot, IUI_ALL); TdlPLog("   DT:UpdateExt(reused)", _t); }
 				pData->bNeedTaskUpdate = FALSE;
 			}
 				
@@ -849,6 +871,9 @@ VIEWDATA* CTabbedToDoCtrl::GetActiveViewData() const
 
 void CTabbedToDoCtrl::SetView(FTC_VIEW nView) 
 {
+	if (nView == FTCV_TASKLIST)
+		nView = FTCV_TASKTREE;
+
 	// take a note of what task is currently singly selected
 	// so that we can prevent unnecessary calls to UpdateControls
 
@@ -1672,7 +1697,7 @@ void CTabbedToDoCtrl::NotifyEndPreferencesUpdate()
 					}
 					else // mark for update
 					{
-						pData->bNeedTaskUpdate = TRUE;
+						{ pData->bNeedTaskUpdate = TRUE; InvalidateTaskSnapshot("   SN:NE-color"); }
 					}
 				}
 
@@ -2140,6 +2165,7 @@ void CTabbedToDoCtrl::SetModified(BOOL bMod, TDC_ATTRIBUTE nAttrib, DWORD dwModT
 
 	if (bMod)
 	{
+		InvalidateTaskSnapshot("   SN:SetModified");
 		m_taskList.SetModified(nAttrib); // always
 
 		FTC_VIEW nView = GetView();
@@ -2175,7 +2201,7 @@ void CTabbedToDoCtrl::SetModified(BOOL bMod, TDC_ATTRIBUTE nAttrib, DWORD dwModT
 			
 		case FTCV_TASKTREE:
 		case FTCV_UNSET:
-			GetViewData(FTCV_TASKLIST)->bNeedTaskUpdate = TRUE;
+			{ GetViewData(FTCV_TASKLIST)->bNeedTaskUpdate = TRUE; InvalidateTaskSnapshot("   SN:tree-view"); }
 			break;
 			
 		case FTCV_UIEXTENSION1:
@@ -2363,7 +2389,7 @@ void CTabbedToDoCtrl::UpdateExtensionViews(TDC_ATTRIBUTE nAttrib, DWORD dwTaskID
 					}
 					else
 					{
-						pData->bNeedTaskUpdate = TRUE;
+						{ pData->bNeedTaskUpdate = TRUE; InvalidateTaskSnapshot("   SN:NE-color"); }
 					}
 				}
 			}
@@ -4228,12 +4254,13 @@ BOOL CTabbedToDoCtrl::HasAnyExtensionViews() const
 
 void CTabbedToDoCtrl::ShowListViewTab(BOOL bVisible)
 {
-	m_tabViews.ShowViewTab(FTCV_TASKLIST, bVisible);
+	// the list view is no longer offered: ignore attempts to show it
+	UNREFERENCED_PARAMETER(bVisible);
 }
 
 BOOL CTabbedToDoCtrl::IsListViewTabShowing() const
 {
-	return m_tabViews.IsViewTabShowing(FTCV_TASKLIST);
+	return FALSE;
 }
 
 void CTabbedToDoCtrl::SetVisibleExtensionViews(const CStringArray& aTypeIDs)

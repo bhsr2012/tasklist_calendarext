@@ -7,7 +7,7 @@
 
 #include "..\Shared\localizer.h"
 #include "..\Shared\misc.h"
-#include "..\Shared\dialoghelper.h"
+#include "..\Shared\filemisc.h"
 #include "..\Shared\themed.h"
 
 #ifdef _DEBUG
@@ -23,6 +23,10 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
+
+LPCTSTR CTDLAboutDlg::EPL_URL      = _T("https://www.eclipse.org/legal/epl-v10.html");
+LPCTSTR CTDLAboutDlg::SOURCE_URL   = _T("https://github.com/bhsr2012/tasklist_calendarext");
+LPCTSTR CTDLAboutDlg::LICENSE_FILE = _T("LICENSE-EPL-1.0.txt");
 
 static LPCTSTR ABOUTCONTRIBUTION = 
 
@@ -64,15 +68,17 @@ CTDLAboutDlg::CTDLAboutDlg(const CString& sAppTitle, CWnd* pParent /*=NULL*/)
 {
 	//{{AFX_DATA_INIT(CTDLAboutDlg)
 	//}}AFX_DATA_INIT
-	m_sTitle.Format(_T("<b>%s</b> (c) AbstractSpoon 2003-15"), sAppTitle);
-	static LPCTSTR SOURCE_URL = _T("https://github.com/bhsr2012/tasklist_calendarext");
-	CString sSourceURL;
-	sSourceURL.Format(_T("\"%s\""), SOURCE_URL);
+	CString sEplURL;
 	
-	m_sLicense.Format(IDS_LICENSE, _T("\"https://github.com/abstractspoon/ToDoList_Wiki/wiki/Free-Open-Source-Software\""), sSourceURL, SOURCE_URL);
+	sEplURL.Format(_T("\"%s\""), EPL_URL);
+	
+	m_sTitle.Format(_T("%s"), sAppTitle);
+	m_sLicense.Format(IDS_LICENSE, sEplURL, SOURCE_URL);
+	m_sThirdParty.Format(IDS_ABOUT_PARTIES);
 	
 	CLocalizer::IgnoreString(m_sTitle);
 	CLocalizer::IgnoreString(m_sLicense);
+	CLocalizer::IgnoreString(m_sThirdParty);
 	CLocalizer::IgnoreString(ABOUTCONTRIBUTION);
 }
 
@@ -83,15 +89,21 @@ void CTDLAboutDlg::DoDataExchange(CDataExchange* pDX)
 	//{{AFX_DATA_MAP(CTDLAboutDlg)
 	DDX_Control(pDX, IDC_TITLE, m_stTitle);
 	DDX_Control(pDX, IDC_LICENSE, m_stLicense);
+	DDX_Control(pDX, IDC_3RDPARTY, m_stThirdParty);
 	DDX_Control(pDX, IDC_CONTRIBUTORS, m_lcContributors);
 	DDX_Text(pDX, IDC_TITLE, m_sTitle);
 	DDX_Text(pDX, IDC_LICENSE, m_sLicense);
+	DDX_Text(pDX, IDC_3RDPARTY, m_sThirdParty);
 	//}}AFX_DATA_MAP
 }
 
 
 BEGIN_MESSAGE_MAP(CTDLAboutDlg, CDialog)
 	//{{AFX_MSG_MAP(CTDLAboutDlg)
+	ON_BN_CLICKED(IDC_OPENLICENSE, OnOpenLicenseFile)
+	ON_BN_CLICKED(IDC_OPENSOURCE, OnOpenSourcePage)
+	ON_BN_CLICKED(IDC_COPYINFO, OnCopyInfo)
+	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -130,33 +142,16 @@ BOOL CTDLAboutDlg::OnInitDialog()
 	if (m_il.Create(1, 16, ILC_COLOR, 1, 1))
 		m_lcContributors.SetImageList(&m_il, LVSIL_SMALL);
 	
-	//	ListView_SetExtendedListViewStyleEx(m_lcOptions, LVS_EX_GRIDLINES, LVS_EX_GRIDLINES);
 	ListView_SetExtendedListViewStyleEx(m_lcContributors, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
 	ListView_SetExtendedListViewStyleEx(m_lcContributors, LVS_EX_LABELTIP, LVS_EX_LABELTIP);
 
 	CThemed::SetWindowTheme(&m_lcContributors, _T("Explorer"));
 
-	m_stTitle.SetBkColor(GetSysColor(COLOR_3DFACE));
-	m_stLicense.SetBkColor(GetSysColor(COLOR_3DFACE));
-
-	// setup social media toolbar
-	if (m_toolbar.CreateEx(this, (TBSTYLE_FLAT, WS_CHILD | CBRS_TOOLTIPS | WS_VISIBLE)))
-	{
-		VERIFY(m_toolbar.LoadToolBar(IDR_SOCIAL_TOOLBAR));
-		
-		const COLORREF MAGENTA = RGB(255, 0, 255);
-		m_toolbar.SetImage(IDB_SOCIAL_TOOLBAR, MAGENTA);
-		
-		m_tbHelper.Initialize(&m_toolbar, this, NULL);
-		
-		CRect rToolbar = CDialogHelper::GetCtrlRect(this, IDC_TOOLBAR);
-
-		rToolbar.left = 10;
-		rToolbar.right = (rToolbar.left + m_toolbar.GetMinReqLength());
-
-		m_toolbar.MoveWindow(rToolbar, FALSE);
-	}
-
+	COLORREF crBk = GetSysColor(COLOR_3DFACE);
+	
+	m_stTitle.SetBkColor(crBk);
+	m_stLicense.SetBkColor(crBk);
+	m_stThirdParty.SetBkColor(crBk);
 
 	GetDlgItem(IDOK)->SetFocus();
 	
@@ -164,20 +159,90 @@ BOOL CTDLAboutDlg::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-BOOL CTDLAboutDlg::OnCommand(WPARAM wParam, LPARAM lParam)
+BOOL CTDLAboutDlg::OpenLicenseFile(CWnd* pParent)
 {
-	// Forward toolbar commands to app window
-	switch (LOWORD(wParam))
+	CString sPath = FileMisc::GetAppFolder();
+	sPath += _T("\\");
+	sPath += LICENSE_FILE;
+	
+	if (FileMisc::FileExists(sPath))
 	{
-	case ID_HELP_FACEBOOK:
-	case ID_HELP_TWITTER:
-	case ID_HELP_GOOGLEPLUS:
-	case ID_HELP_GOOGLEGROUP:
-	case ID_HELP_WIKI:
-	case ID_HELP_LINKEDIN:
-		return AfxGetMainWnd()->SendMessage(WM_COMMAND, wParam, lParam);
+		FileMisc::Run(pParent->GetSafeHwnd(), sPath);
+		return TRUE;
 	}
 	
-	// else
-	return CDialog::OnCommand(wParam, lParam);
+	// 未随程序安装则退回在线许可全文
+	FileMisc::Run(pParent->GetSafeHwnd(), EPL_URL);
+	return FALSE;
+}
+
+void CTDLAboutDlg::OpenSourcePage(CWnd* pParent)
+{
+	FileMisc::Run(pParent->GetSafeHwnd(), SOURCE_URL);
+}
+
+void CTDLAboutDlg::OnOpenLicenseFile()
+{
+	OpenLicenseFile(this);
+}
+
+void CTDLAboutDlg::OnOpenSourcePage()
+{
+	OpenSourcePage(this);
+}
+
+void CTDLAboutDlg::OnCopyInfo()
+{
+	CString sText;
+	
+	sText.Format(_T("TaskList（基于 ToDoList 7.0.11，Copyright (c) 2003-2015 AbstractSpoon Software）\r\n")
+				 _T("许可：Eclipse Public License 1.0\r\n")
+				 _T("本版本含修改，修改文件的完整源代码：%s\r\n")
+				 _T("许可全文：%s\r\n")
+				 _T("安装目录内另附：LICENSE-EPL-1.0.txt、NOTICE.md\r\n")
+				 _T("本程序按原样提供，不附带任何担保。\r\n"),
+				 SOURCE_URL, EPL_URL);
+	
+	if (!::OpenClipboard(GetSafeHwnd()))
+		return;
+	
+	::EmptyClipboard();
+	
+	int nChars = sText.GetLength();
+	HGLOBAL hMem = ::GlobalAlloc(GMEM_MOVEABLE, (nChars + 1) * sizeof(TCHAR));
+	
+	if (hMem)
+	{
+		LPTSTR psz = (LPTSTR)::GlobalLock(hMem);
+		
+		if (psz)
+		{
+			memcpy(psz, (LPCTSTR)sText, nChars * sizeof(TCHAR));
+			psz[nChars] = _T('\0');
+			::GlobalUnlock(hMem);
+			
+			::SetClipboardData(CF_UNICODETEXT, hMem);
+			hMem = NULL;	// 所有权已移交系统
+		}
+		
+		if (hMem)
+			::GlobalFree(hMem);
+	}
+	
+	::CloseClipboard();
+	
+	SetDlgItemText(IDC_COPYINFO, _T("已复制"));
+	SetTimer(1, 1200, NULL);
+}
+
+void CTDLAboutDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == 1)
+	{
+		KillTimer(1);
+		SetDlgItemText(IDC_COPYINFO, _T("复制信息(&C)"));
+		return;
+	}
+	
+	CDialog::OnTimer(nIDEvent);
 }

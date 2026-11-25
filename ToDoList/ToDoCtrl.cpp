@@ -8704,6 +8704,13 @@ int CToDoCtrl::GetAllTasks(CTaskFile& tasks) const
 {
 	ASSERT(tasks.GetTaskCount() == 0);
 
+	if (TdlPEnabled())
+	{
+		char _b[96];
+		sprintf(_b, "   GA:caller@%Ix", (size_t)_ReturnAddress() - (size_t)::GetModuleHandle(NULL));
+		TdlPLog(_b, TdlPNow());
+	}
+
 	TdlCopyReset();
 	LONGLONG _tGA0 = TdlPNow();
 

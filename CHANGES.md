@@ -292,3 +292,27 @@ Two kinds of change are mixed in this set:
 | File | + | - |
 |---|---|---|
 | `iCalImportExport/iCalImportExport.vcxproj` | 154 | 6 |
+
+
+## Post-publication sync (2026-11-26)
+
+The patch above was generated from the state at 02:44. A later byte-for-byte
+audit against the working tree found 14 source files that were either not yet
+published or had changed afterwards; they are now included in this repository
+as full source files. The patch is kept as-is for traceability; the authoritative
+source of these 14 files is the file content in the tree.
+
+Newly published (6):
+`GanttChartExt/GanttTreeListCtrl.h`, `Shared/HoldRedraw.cpp`,
+`Shared/TreeListSyncer.cpp`, `ToDoList/TDLAboutDlg.h`,
+`ToDoList/TabbedToDoCtrl.h`, `Shared/DrawingCache.h`
+
+Updated to current working-tree content (8):
+`GanttChartExt/GanttTreeListCtrl.cpp`, `ToDoList/TDLAboutDlg.cpp`,
+`ToDoList/TabbedToDoCtrl.cpp`, `ToDoList/ToDoCtrl.cpp`,
+`ToDoList/ToDoList.rc`, `ToDoList/ToDoListWnd.cpp`,
+`ToDoList/ToDoListWnd.h`, `ToDoList/resource.h`
+
+These changes cover the calendar/gantt layout fix, the task-edit/filter-bar
+collapse, the list-view removal, the tray-icon lifecycle rewrite, the window
+instance lookup by class name, the About dialog, and the associated resource IDs.

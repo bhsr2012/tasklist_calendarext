@@ -368,6 +368,8 @@ protected:
 	afx_msg LRESULT OnToDoListShowWindow(WPARAM wp, LPARAM lp);
 	afx_msg LRESULT OnClose(WPARAM /*wp*/, LPARAM bForUpdate);
 	afx_msg void OnAbout();
+	afx_msg void OnAboutLicense();
+	afx_msg void OnAboutSource();
 	afx_msg void OnArchiveCompletedtasks();
 	afx_msg void OnCloseTasklist();
 	afx_msg void OnCloseall();

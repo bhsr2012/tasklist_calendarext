@@ -71,6 +71,17 @@ const double END_OF_DAY				= 0.999988425923; //(((24 * 60 * 60) - 1) / (24.0 * 6
 
 //////////////////////////////////////////////////////////////////////
 
+// ---- 诊断开关（临时）: GANTT_SKIP=tree|list|depends ----
+static BOOL GanttSkipStage(LPCTSTR szStage)
+{
+	TCHAR szValue[64] = { 0 };
+
+	if (::GetEnvironmentVariable(_T("GANTT_SKIP"), szValue, 63) <= 0)
+		return FALSE;
+
+	return (_tcsstr(szValue, szStage) != NULL);
+}
+
 #define GET_GI_RET(id, gi, ret)	\
 {								\
 	if (id == 0) return ret;	\
@@ -161,7 +172,8 @@ CGanttTreeListCtrl::CGanttTreeListCtrl()
 	m_ptLastDependPick(0),
 	m_pDependEdit(NULL),
 	m_bReadOnly(FALSE),
-	m_hFontDone(NULL)
+	m_hFontDone(NULL),
+	m_bLongestCached(FALSE)
 {
 	G_MovePix = -1000;
 }
@@ -322,12 +334,13 @@ BOOL CGanttTreeListCtrl::SelectTask(DWORD dwTaskID)
 	if (hti == NULL)
 		return FALSE;
 
-	BOOL bWasVisible = IsTreeItemVisible(m_hwndTree, hti);
-
 	SelectTreeItem(m_hwndTree, hti);
 
-	if (!bWasVisible)
-		ExpandList();
+	// Scroll the item into view, expanding only its own ancestors. A full
+	// ExpandList() here costs ~1.6s on a 10k task list because every parent
+	// is expanded and laid out, and it also discards whatever the user had
+	// deliberately collapsed.
+	::SendMessage(m_hwndTree, TVM_ENSUREVISIBLE, 0, (LPARAM)hti);
 
 	return TRUE;
 }
@@ -528,6 +541,10 @@ void CGanttTreeListCtrl::UpdateTasks(const ITaskList* pTasks, IUI_UPDATETYPE nUp
 
 	if (bResort)
 		{ LONGLONG _g = CalPNow(); Sort(m_nSortBy, FALSE); CalPLog("GP:Sort", _g); }
+
+	// measure from the data model again once the rebuild is done
+	m_bLongestCached = FALSE;
+
 	CalPLog("GP:UpdateTasks", _gUT);
 }
 
@@ -794,9 +811,13 @@ GANTTDISPLAY* CGanttTreeListCtrl::GetGanttDisplay(DWORD dwTaskID)
 }
 
 static __int64 s_gAttr = 0, s_gIns = 0, s_gData = 0, s_gMap = 0;
+static int s_nInsN = 0;
+static int s_nDispN = 0;
 void CGanttTreeListCtrl::RebuildTree(const ITaskList14* pTasks)
 {
 	s_gAttr = s_gIns = s_gData = s_gMap = 0;
+	s_nInsN = 0;
+	s_nDispN = 0;
 	CTreeCtrl* pTree = (CTreeCtrl*)CWnd::FromHandle(m_hwndTree);
 
 	TreeView_DeleteAllItems(m_hwndTree);
@@ -805,6 +826,11 @@ void CGanttTreeListCtrl::RebuildTree(const ITaskList14* pTasks)
 	m_data.RemoveAll();
 	m_display.RemoveAll();
 
+	// Set the final column widths while the tree is still empty, so the
+	// post-build RecalcTreeColumns() finds nothing to change and therefore
+	// never calls Resize() - which re-lays out every row (1.5s at 10k rows).
+	{ LONGLONG _g = CalPNow(); PrecalcTreeColumnWidths(pTasks); CalPLog("GP:PreCalcCols", _g); }
+
 	// cache and reset year range which will get 
 	// recalculated as we build the tree
 	COleDateTime dtPrevEarliest = m_dtEarliest, dtPrevLatest = m_dtLatest;
@@ -812,13 +838,28 @@ void CGanttTreeListCtrl::RebuildTree(const ITaskList14* pTasks)
 	CDateHelper::ClearDate(m_dtEarliest);
 	CDateHelper::ClearDate(m_dtLatest);
 
-	DWORD dwTreeStyle = (DWORD)::GetWindowLong(m_hwndTree, GWL_STYLE);
-	if (dwTreeStyle & TVS_NONEVENHEIGHT)
-		::SetWindowLong(m_hwndTree, GWL_STYLE, dwTreeStyle & ~TVS_NONEVENHEIGHT);
+	// The gantt tree is a fixed-column control: the header above it owns the
+	// column layout and horizontal scrolling, and every row is the same
+	// height. Any of these styles left set makes comctl32 re-walk all items
+	// whenever the control is resized or scrolled - TVS_NOHSCROLL forces a
+	// recompute of the horizontal extent per item, which on 10476 rows
+	// turns a single MoveWindow into 3+ seconds. Dropping them changes
+	// nothing visually because the tree never scrolls itself.
+	{
+		DWORD dwTreeStyle = (DWORD)::GetWindowLong(m_hwndTree, GWL_STYLE);
+		DWORD dwNewStyle = ((dwTreeStyle & ~(DWORD)(WS_HSCROLL | TVS_NONEVENHEIGHT)) | TVS_NOHSCROLL);
 
-	{ LONGLONG _g = CalPNow(); BuildTreeItem(pTasks, pTasks->GetFirstTask(), *pTree, NULL, TRUE); CalPLog("GP:BuildTree", _g); }
+		if (dwNewStyle != dwTreeStyle)
+		{
+			::SetWindowLong(m_hwndTree, GWL_STYLE, dwNewStyle);
+			::SetWindowPos(m_hwndTree, NULL, 0, 0, 0, 0,
+				SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+		}
+	}
 
-	::SetWindowLong(m_hwndTree, GWL_STYLE, dwTreeStyle);
+	LONGLONG _g = CalPNow();
+	BuildTreeItem(pTasks, pTasks->GetFirstTask(), *pTree, NULL, TRUE);
+	CalPLog("GP:BuildTree", _g);
 
 	// restore previous date range if no data
 	if (m_data.GetCount() == 0)
@@ -827,7 +868,7 @@ void CGanttTreeListCtrl::RebuildTree(const ITaskList14* pTasks)
 		m_dtLatest = dtPrevLatest;
 	}
 
-	{ char _b[256]; sprintf(_b, "GP:parts attr=%.0f map=%.0f ins=%.0f setdata=%.0f", (double)s_gAttr * 1000.0 / (double)CalPFreq(), (double)s_gMap * 1000.0 / (double)CalPFreq(), (double)s_gIns * 1000.0 / (double)CalPFreq(), (double)s_gData * 1000.0 / (double)CalPFreq()); CalPLog(_b, CalPNow()); }
+	{ char _b[256]; sprintf(_b, "GP:parts attr=%.0f map=%.0f ins=%.0f setdata=%.0f disp=%d", (double)s_gAttr * 1000.0 / (double)CalPFreq(), (double)s_gMap * 1000.0 / (double)CalPFreq(), (double)s_gIns * 1000.0 / (double)CalPFreq(), (double)s_gData * 1000.0 / (double)CalPFreq(), s_nDispN); CalPLog(_b, CalPNow()); }
 	{ LONGLONG _g = CalPNow(); RecalcParentDates(); CalPLog("GP:RebuildParents", _g); }
 	{ LONGLONG _g = CalPNow(); ExpandList(); CalPLog("GP:ExpandList", _g); }
 }
@@ -907,6 +948,12 @@ void CGanttTreeListCtrl::BuildTreeItem(const ITaskList14* pTasks, HTASKITEM hTas
 	__int64 _tI = CalPNow();
 	HTREEITEM hti = tree.InsertItem(LPSTR_TEXTCALLBACK, htiParent);
 	s_gIns += (CalPNow() - _tI);
+	if (CalPEnabled() && (++s_nInsN % 1000) == 0)
+	{
+		char _b[96];
+		sprintf(_b, "GP:ins@%d cum=%.0f", s_nInsN, (double)s_gIns * 1000.0 / (double)CalPFreq());
+		CalPLog(_b, CalPNow());
+	}
 	__int64 _tD = CalPNow();
 	tree.SetItemData(hti, dwTaskID);
 	s_gData += (CalPNow() - _tD);
@@ -1292,14 +1339,13 @@ void CGanttTreeListCtrl::Resize(const CRect& rect)
 	if (m_treeHeader.GetItemCount())
 	{
 		int nLastCol = m_treeHeader.GetLastVisibleItem();
-		
+
 		CRect rItem;
 		m_treeHeader.GetItemRect(nLastCol, rItem);
 
 		int nTreeWidth = (rItem.right + 4);
 
 		CTreeListSyncer::Resize(rect, nTreeWidth);
-
 	}
 }
 
@@ -1393,6 +1439,9 @@ LRESULT CGanttTreeListCtrl::OnTreeCustomDraw(NMTVCUSTOMDRAW* pTVCD)
 								
 	case CDDS_ITEMPOSTPAINT:
 		{
+			if (GanttSkipStage(_T("tree")))
+				return CDRF_SKIPDEFAULT;
+
 			// check row is visible
 			CRect rItem;
 			GetTreeItemRect(hti, GTLCC_TITLE, rItem);
@@ -1496,6 +1545,9 @@ LRESULT CGanttTreeListCtrl::OnListCustomDraw(NMLVCUSTOMDRAW* pLVCD)
 								
 	case CDDS_ITEMPREPAINT:
 		{
+			if (GanttSkipStage(_T("list")))
+				return CDRF_SKIPDEFAULT;
+
 			CDC* pDC = CDC::FromHandle(pLVCD->nmcd.hdc);
 			DWORD dwTaskID = GetTaskID(nItem);
 			
@@ -1561,7 +1613,7 @@ LRESULT CGanttTreeListCtrl::OnListCustomDraw(NMLVCUSTOMDRAW* pLVCD)
 		{
 			CGanttDependArray aDepends;
 			
-			if (BuildVisibleDependencyList(aDepends))
+			if (!GanttSkipStage(_T("depends")) && BuildVisibleDependencyList(aDepends))
 			{
 				CDC* pDC = CDC::FromHandle(pLVCD->nmcd.hdc);
 				
@@ -1848,6 +1900,7 @@ LRESULT CGanttTreeListCtrl::WindowProc(HWND hRealWnd, UINT msg, WPARAM wp, LPARA
 
 						if (pDispInfo->item.mask & TVIF_TEXT)
 						{
+							s_nDispN++;
 							DWORD dwTaskID = pDispInfo->item.lParam;
 
 							const GANTTITEM* pGI = NULL;
@@ -2404,6 +2457,7 @@ void CGanttTreeListCtrl::SetDoneTaskAttributes(COLORREF color, BOOL bStrikeThru)
 {
 	SetColor(m_crDone, color);
 	HFONT hFont = (HFONT)::SendMessage(m_hwndTree, WM_GETFONT, 0, 0);
+	GraphicsMisc::VerifyDeleteObject(m_hFont);
 	m_hFont = GraphicsMisc::CreateFont(hFont, GMFS_PLAIN, GMFS_STRIKETHRU);
 
 	if (bStrikeThru)
@@ -4107,17 +4161,25 @@ BOOL CGanttTreeListCtrl::RecalcTreeColumns(int nEditAttribute, BOOL bResize)
 		CDC* pDC = CDC::FromHandle(::GetDC(m_hwndTree));
 		CFont* pOldFont = GraphicsMisc::PrepareDCFont(pDC, m_hwndTree);
 
+		BOOL bWidthChanged = FALSE;
+
 		if (bTitle)
-			RecalcTreeColumnWidth(GTLCC_TITLE, pDC);
+			bWidthChanged |= RecalcTreeColumnWidth(GTLCC_TITLE, pDC);
 			
 		if (bAllocTo)
-			RecalcTreeColumnWidth(GTLCC_ALLOCTO, pDC);
+			bWidthChanged |= RecalcTreeColumnWidth(GTLCC_ALLOCTO, pDC);
 		
 		pDC->SelectObject(pOldFont);
-		::ReleaseDC(m_treeHeader, *pDC);
+		::ReleaseDC(m_hwndTree, *pDC);
 
-		if (bResize)
+		// The syncer re-lays out every row on resize: seconds per call on a
+		// 10k task list. Skip it unless a column width really changed.
+		if (bResize && bWidthChanged)
+		{
+			LONGLONG _tR = CalPNow();
 			Resize();
+			CalPLog("GP:RecalcCols.Resize", _tR);
+		}
 
 		return TRUE;
 	}
@@ -4125,7 +4187,48 @@ BOOL CGanttTreeListCtrl::RecalcTreeColumns(int nEditAttribute, BOOL bResize)
 	return FALSE;
 }
 
-void CGanttTreeListCtrl::RecalcTreeColumnWidth(int nCol, CDC* pDC)
+int CGanttTreeListCtrl::CalcTreeTitleWidth(CDC* pDC) const
+{
+	// Measuring every item costs one GetItemText round trip each (8.8s for
+	// 10476 tasks). The widest title in the data model is a sound upper
+	// bound for the column, so use that plus the deepest indent.
+	const CString* pLongest = NULL;
+	CString sLongest;
+
+	if (m_bLongestCached)
+	{
+		sLongest = m_sLongestTitle;
+		pLongest = &sLongest;
+	}
+	else
+	{
+		int nMaxLen = 0;
+		POSITION pos = m_data.GetStartPosition();
+
+		while (pos)
+		{
+			DWORD dwTaskID = 0;
+			GANTTITEM* pGI = NULL;
+			m_data.GetNextAssoc(pos, dwTaskID, pGI);
+
+			if (pGI && (pGI->sTitle.GetLength() > nMaxLen))
+			{
+				nMaxLen = pGI->sTitle.GetLength();
+				pLongest = &pGI->sTitle;
+			}
+		}
+	}
+
+	if (pLongest == NULL)
+		return TREE_TITLE_MIN_WIDTH;
+
+	int nWidth = GraphicsMisc::GetAverageMaxStringWidth(*pLongest, pDC);
+	nWidth += (3 * 16); // deepest possible indent + expand button
+
+	return max(nWidth, TREE_TITLE_MIN_WIDTH);
+}
+
+BOOL CGanttTreeListCtrl::RecalcTreeColumnWidth(int nCol, CDC* pDC)
 {
 	BOOL bNullDC = (pDC == NULL);
 	CFont* pOldFont = NULL;
@@ -4141,12 +4244,41 @@ void CGanttTreeListCtrl::RecalcTreeColumnWidth(int nCol, CDC* pDC)
 	switch (nCol)
 	{
 	case GTLCC_TITLE:
-		TCH()->FindWidestItem(nColWidth, TRUE, pDC);
-		nColWidth = max(nColWidth, TREE_TITLE_MIN_WIDTH);
+		nColWidth = CalcTreeTitleWidth(pDC);
 		break;
 		
 	case GTLCC_ALLOCTO:
-		nColWidth = GraphicsMisc::GetAverageMaxStringWidth(GetLongestVisibleAllocTo(NULL), pDC);
+		{
+			// Walking the tree here costs a GetItemText round trip per task
+			// (4.1s for 10476 rows). The longest alloc-to string known for
+			// the current data set is all the column width needs.
+			CString sLongest;
+
+			if (m_bLongestCached)
+			{
+				sLongest = m_sLongestAllocTo;
+			}
+			else
+			{
+				int nMaxLen = 0;
+				POSITION pos = m_data.GetStartPosition();
+
+				while (pos)
+				{
+					DWORD dwTaskID = 0;
+					GANTTITEM* pGI = NULL;
+					m_data.GetNextAssoc(pos, dwTaskID, pGI);
+
+					if (pGI && (pGI->sAllocTo.GetLength() > nMaxLen))
+					{
+						nMaxLen = pGI->sAllocTo.GetLength();
+						sLongest = pGI->sAllocTo;
+					}
+				}
+			}
+
+			nColWidth = GraphicsMisc::GetAverageMaxStringWidth(sLongest, pDC);
+		}
 		break;
 		
 	// rest of attributes are fixed width
@@ -4173,26 +4305,68 @@ void CGanttTreeListCtrl::RecalcTreeColumnWidth(int nCol, CDC* pDC)
 	int nTitleWidth = (m_treeHeader.GetItemTextWidth(nCol, pDC) + (2 * HD_COLPADDING));
 	ASSERT(nTitleWidth);
 	
-	if (nCol == 0)
-	{
-		m_treeHeader.SetItemWidth(nCol, max(min(nColWidth,480), nTitleWidth));
-	}
-	else if (nCol == 3)
-	{
-		m_treeHeader.SetItemWidth(nCol, nTitleWidth);
-	}
-	else
-	{
-		m_treeHeader.SetItemWidth(nCol, max(nTitleWidth, nColWidth));
-	}
-	
+	int nWant = nColWidth;
 
-	// cleanup
+	if (nCol == 0)
+		nWant = max(min(nColWidth, 480), nTitleWidth);
+	else if (nCol == 3)
+		nWant = nTitleWidth;
+	else
+		nWant = max(nTitleWidth, nColWidth);
+
+	BOOL bChanged = (m_treeHeader.GetItemWidth(nCol) != nWant);
+
+	// Resizing the tree syncer re-lays out every row, which costs seconds
+	// on a 10k task list, so only do it when the width really changed.
+	if (bChanged)
+		m_treeHeader.SetItemWidth(nCol, nWant);
+
 	if (bNullDC)
 	{
 		pDC->SelectObject(pOldFont);
-		::ReleaseDC(m_treeHeader, pDC->Detach());
+		::ReleaseDC(m_hwndTree, pDC->Detach());
 	}
+
+	return bChanged;
+}
+
+void CGanttTreeListCtrl::CacheLongestStrings(const ITaskList14* pTasks)
+{
+	m_sLongestTitle.Empty();
+	m_sLongestAllocTo.Empty();
+
+	if (pTasks)
+	{
+		HTASKITEM hTask = pTasks->GetFirstTask();
+
+		while (hTask)
+		{
+			LPCTSTR szTitle = pTasks->GetTaskTitle(hTask);
+
+			if (szTitle && (_tcslen(szTitle) > (size_t)m_sLongestTitle.GetLength()))
+				m_sLongestTitle = szTitle;
+
+			CString sAllocTo = GetTaskAllocTo(pTasks, hTask);
+
+			if (sAllocTo.GetLength() > m_sLongestAllocTo.GetLength())
+				m_sLongestAllocTo = sAllocTo;
+
+			hTask = pTasks->GetNextTask(hTask);
+		}
+	}
+
+	m_bLongestCached = TRUE;
+}
+
+void CGanttTreeListCtrl::PrecalcTreeColumnWidths(const ITaskList14* pTasks)
+{
+	// Setting the final column widths while the tree is still empty means the
+	// post-build RecalcTreeColumns() finds nothing to change and therefore
+	// never calls Resize(), which re-lays out all 10476 rows.
+	CacheLongestStrings(pTasks);
+
+	RecalcTreeColumnWidth(GTLCC_TITLE, NULL);
+	RecalcTreeColumnWidth(GTLCC_ALLOCTO, NULL);
 }
 
 void CGanttTreeListCtrl::UpdateColumnsWidthAndText(int nWidth)
