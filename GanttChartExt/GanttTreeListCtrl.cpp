@@ -870,7 +870,7 @@ void CGanttTreeListCtrl::RebuildTree(const ITaskList14* pTasks)
 
 	{ char _b[256]; sprintf(_b, "GP:parts attr=%.0f map=%.0f ins=%.0f setdata=%.0f disp=%d", (double)s_gAttr * 1000.0 / (double)CalPFreq(), (double)s_gMap * 1000.0 / (double)CalPFreq(), (double)s_gIns * 1000.0 / (double)CalPFreq(), (double)s_gData * 1000.0 / (double)CalPFreq(), s_nDispN); CalPLog(_b, CalPNow()); }
 	{ LONGLONG _g = CalPNow(); RecalcParentDates(); CalPLog("GP:RebuildParents", _g); }
-	{ LONGLONG _g = CalPNow(); ExpandList(); CalPLog("GP:ExpandList", _g); }
+	{ LONGLONG _g = CalPNow(); ExpandListAppendOnly(); CalPLog("GP:ExpandList", _g); }
 }
 
 COleDateTime CGanttTreeListCtrl::GetDate(time64_t tDate, BOOL bEndOfDay)
@@ -3875,6 +3875,32 @@ void CGanttTreeListCtrl::ExpandList()
 {
 	int nNextIndex = 0;
 	ExpandList(NULL, nNextIndex);
+}
+
+// Full rebuild: RebuildTree() just cleared the list (ListView_DeleteAllItems),
+// so no tree item can already be in the list. Generic ExpandList() calls
+// ListView_FindItem() per item, scanning the growing list (O(N^2), ~0.32s
+// at 10k rows) only to get -1. Append directly: identical list, no scan.
+void CGanttTreeListCtrl::ExpandListAppendOnly()
+{
+	int nNextIndex = 0;
+	ExpandListAppendOnly(NULL, nNextIndex);
+}
+
+void CGanttTreeListCtrl::ExpandListAppendOnly(HTREEITEM hti, int& nNextIndex)
+{
+	HTREEITEM htiChild = TreeView_GetChild(m_hwndTree, hti);
+
+	while (htiChild)
+	{
+		DWORD dwListData = GetRequiredLinkData(m_hwndList, m_hwndTree, htiChild);
+		InsertListItem(m_hwndList, nNextIndex++, dwListData);
+
+		if (IsTreeItemExpanded(m_hwndTree, htiChild))
+			ExpandListAppendOnly(htiChild, nNextIndex);
+
+		htiChild = TreeView_GetNextItem(m_hwndTree, htiChild, TVGN_NEXT);
+	}
 }
 
 void CGanttTreeListCtrl::ExpandList(HTREEITEM hti, int& nNextIndex)

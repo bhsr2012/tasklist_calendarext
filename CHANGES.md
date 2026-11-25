@@ -294,6 +294,16 @@ Two kinds of change are mixed in this set:
 | `iCalImportExport/iCalImportExport.vcxproj` | 154 | 6 |
 
 
+
+## Gantt full-rebuild list sync optimization
+
+- GanttChartExt/GanttTreeListCtrl.cpp/.h: on a full task-tree rebuild the list
+  control is cleared first, so no item can already be present. The generic
+  sync path still called ListView_FindItem() once per item, scanning the
+  growing list (O(N^2)) only to get -1. Added ExpandListAppendOnly() used
+  only by the full-rebuild path; it appends directly with identical result.
+  Incremental expand/collapse paths are unchanged.
+
 ## Post-publication sync (2026-11-26)
 
 The patch above was generated from the state at 02:44. A later byte-for-byte
