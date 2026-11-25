@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include "tdlprof.h"
 #include "resource.h"
 #include "ToDoListWnd.h"
 #include "ToolsCmdlineParser.h"
@@ -4240,14 +4239,14 @@ TDC_FILE CToDoListWnd::OpenTaskList(LPCTSTR szFilePath, BOOL bNotifyDueTasks)
 	if (nOpen == TDCF_SUCCESS)
 	{
  
-		int nTDC; { LONGLONG _t = TdlPNow(); nTDC = AddToDoCtrl(pTDC, &storageInfo); TdlPLog("AddToDoCtrl", _t); }
+		int nTDC; {  nTDC = AddToDoCtrl(pTDC, &storageInfo);  }
  
 
 		// notify readonly
 		m_mgrToDoCtrls.CheckNotifyReadonly(nTDC);
 
 		// reload any reminders
-		{ LONGLONG _t = TdlPNow(); m_reminders.AddToDoCtrl(*pTDC); TdlPLog("reminders.Add", _t); }
+		{  m_reminders.AddToDoCtrl(*pTDC);  }
 		
 		// notify user of due tasks if req
 		if (bNotifyDueTasks)
@@ -4261,9 +4260,9 @@ TDC_FILE CToDoListWnd::OpenTaskList(LPCTSTR szFilePath, BOOL bNotifyDueTasks)
 			pTDC->SetModified();
 		}
 		
-		{ LONGLONG _t = TdlPNow(); UpdateCaption(); TdlPLog("UpdateCaption", _t); }
-		{ LONGLONG _t = TdlPNow(); UpdateStatusbar(); TdlPLog("UpdateStatusbar", _t); }
-		{ LONGLONG _t = TdlPNow(); OnTimerDueItems(nTDC); TdlPLog("OnTimerDueItems", _t); }
+		{  UpdateCaption();  }
+		{  UpdateStatusbar();  }
+		{  OnTimerDueItems(nTDC);  }
 	 
 		// update search
 		if (userPrefs.GetRefreshFindOnLoad() && m_findDlg.GetSafeHwnd())
@@ -4274,7 +4273,7 @@ TDC_FILE CToDoListWnd::OpenTaskList(LPCTSTR szFilePath, BOOL bNotifyDueTasks)
 		if (m_strEquipmentList.GetLength() > 0)
 		{
 			//李波 这里很慢
-			{ LONGLONG _t = TdlPNow(); SetCalendarView(); TdlPLog("SetCalendarView", _t); }
+			{  SetCalendarView();  }
 			//李波在此载入设备列表信息
 			CFilteredToDoCtrl& tdc = GetToDoCtrl();
 			tdc.m_strEquipmentList = m_strEquipmentList;
@@ -4286,11 +4285,11 @@ TDC_FILE CToDoListWnd::OpenTaskList(LPCTSTR szFilePath, BOOL bNotifyDueTasks)
 			Equipmentdata.dwData = 3;// 传递的是设备信息
 			Equipmentdata.lpData = m_strEquipmentList.GetBuffer(0);
 			Equipmentdata.cbData = sizeof(TCHAR)*m_strEquipmentList.GetLength();
-			{ LONGLONG _t = TdlPNow(); ::SendMessage(HCalendarWnd, WM_COPYDATA, (WPARAM)m_hWnd, (LPARAM)&Equipmentdata); TdlPLog("COPYDATA.equip", _t); }
+			{  ::SendMessage(HCalendarWnd, WM_COPYDATA, (WPARAM)m_hWnd, (LPARAM)&Equipmentdata);  }
 		}
 		else
 		{
-			{ LONGLONG _t = TdlPNow(); SetCalendarView(); TdlPLog("SetCalendarView", _t); }
+			{  SetCalendarView();  }
 			//李波在此载入设备列表信息
 			CFilteredToDoCtrl& tdc = GetToDoCtrl();
 			tdc.m_strEquipmentList = m_strEquipmentList;
@@ -4302,8 +4301,8 @@ TDC_FILE CToDoListWnd::OpenTaskList(LPCTSTR szFilePath, BOOL bNotifyDueTasks)
 			Equipmentdata.dwData = 3;// 传递的是设备信息
 			Equipmentdata.lpData = m_strEquipmentList.GetBuffer(0);
 			Equipmentdata.cbData = sizeof(TCHAR)*m_strEquipmentList.GetLength();
-			{ LONGLONG _t = TdlPNow(); ::SendMessage(HCalendarWnd, WM_COPYDATA, (WPARAM)m_hWnd, (LPARAM)&Equipmentdata); TdlPLog("COPYDATA.equip", _t); }
-			{ LONGLONG _t = TdlPNow(); SetGanteView(); TdlPLog("SetGanteView", _t); }
+			{  ::SendMessage(HCalendarWnd, WM_COPYDATA, (WPARAM)m_hWnd, (LPARAM)&Equipmentdata);  }
+			{  SetGanteView();  }
 		}
 
 	}
@@ -4317,7 +4316,7 @@ TDC_FILE CToDoListWnd::OpenTaskList(LPCTSTR szFilePath, BOOL bNotifyDueTasks)
 		AddToDoCtrl(pTDC);
 	}
 	
-	{ LONGLONG _t = TdlPNow(); ShowAllWindow(); TdlPLog("ShowAllWindow", _t); }
+	{  ShowAllWindow();  }
 
 	return nOpen;
 }
@@ -4381,7 +4380,7 @@ TDC_FILE CToDoListWnd::OpenTaskList(CFilteredToDoCtrl* pTDC, LPCTSTR szFilePath,
 	//李波暂时禁用控件刷新
 	CAutoComboBox::DisableRefreshDropWidth();
 	//李波 这里很慢
-	TDC_FILE nOpen; { LONGLONG _t = TdlPNow(); nOpen = pTDC->Load(sFilePath, tasks); TdlPLog("pTDC->Load", _t); }
+	TDC_FILE nOpen; {  nOpen = pTDC->Load(sFilePath, tasks);  }
 	// cleanup temp storage file
 	if (nType == TDCPP_STORAGE)
 	{
@@ -5511,11 +5510,11 @@ void CToDoListWnd::SetCalendarView()
 {
 	CFilteredToDoCtrl& tdc = GetToDoCtrl();
  
-	{ LONGLONG _t = TdlPNow(); tdc.ShowWindow(SW_HIDE); TdlPLog("      CVW:Hide", _t); }
+	{  tdc.ShowWindow(SW_HIDE);  }
 	//李波 这里很慢
-	{ LONGLONG _t = TdlPNow(); tdc.SetView(FTCV_FIRSTUIEXTENSION); TdlPLog("      CVW:SetView", _t); }
+	{  tdc.SetView(FTCV_FIRSTUIEXTENSION);  }
  
-	{ LONGLONG _t = TdlPNow(); tdc.ShowWindow(SW_SHOW); TdlPLog("      CVW:Show", _t); }
+	{  tdc.ShowWindow(SW_SHOW);  }
 	//IUIExtensionWindow * pCalendarExtensionWindow = tdc.GetCalendar();
 	//CCalendarWnd * pCalendarWnd = (CCalendarWnd *)pCalendarExtensionWindow;
 	//HWND HCalendarWnd = pCalendarWnd->GetSafeHwnd();
@@ -6659,7 +6658,7 @@ int CToDoListWnd::AddToDoCtrl(CFilteredToDoCtrl* pTDC, TSM_TASKLISTINFO* pInfo, 
 {
 	// add tdc first to ensure tab controls has some
 	// items before we query it for its size
-	int nSel; { LONGLONG _t = TdlPNow(); nSel = m_mgrToDoCtrls.AddToDoCtrl(pTDC, pInfo); TdlPLog("  AD:addToMgr", _t); }
+	int nSel; {  nSel = m_mgrToDoCtrls.AddToDoCtrl(pTDC, pInfo);  }
 	
 	// make sure size is right
 	CRect rTDC;
@@ -6667,12 +6666,12 @@ int CToDoListWnd::AddToDoCtrl(CFilteredToDoCtrl* pTDC, TSM_TASKLISTINFO* pInfo, 
 	if (CalcToDoCtrlRect(rTDC))
 		pTDC->MoveWindow(rTDC);
 	
-	{ LONGLONG _t = TdlPNow(); SelectToDoCtrl(nSel, FALSE); TdlPLog("  AD:SelectToDoCtrl", _t); }
+	{  SelectToDoCtrl(nSel, FALSE);  }
 	// SetFocusToTasks already done inside SelectToDoCtrl()
-	{ LONGLONG _t = TdlPNow(); TdlPLog("  AD:SetFocusToTasks(skipped)", _t); }
+	{   }
 	
 	// make sure the tab control is correctly sized
-	{ LONGLONG _t = TdlPNow(); if (bResizeDlg) Resize(); TdlPLog("  AD:Resize", _t); }
+	{  if (bResizeDlg) Resize();  }
 	
 	// if this is the only control then set or terminate the various status 
 	// check timers
@@ -6688,7 +6687,7 @@ int CToDoListWnd::AddToDoCtrl(CFilteredToDoCtrl* pTDC, TSM_TASKLISTINFO* pInfo, 
 	}
 	
 	// make sure everything looks okay
-	{ LONGLONG _t = TdlPNow(); Invalidate(); UpdateWindow(); TdlPLog("  AD:Invalidate", _t); }
+	{  Invalidate(); UpdateWindow();  }
 	
 	return nSel;
 }
@@ -7117,7 +7116,7 @@ void CToDoListWnd::OnTimerAUTO_OPen_File(int nCtrl)
 			Equipmentdata.dwData = 3;// 传递的是设备信息
 			Equipmentdata.lpData = m_strEquipmentList.GetBuffer(0);
 			Equipmentdata.cbData = sizeof(TCHAR)*m_strEquipmentList.GetLength();
-			{ LONGLONG _t = TdlPNow(); ::SendMessage(HCalendarWnd, WM_COPYDATA, (WPARAM)m_hWnd, (LPARAM)&Equipmentdata); TdlPLog("COPYDATA.equip", _t); }
+			{  ::SendMessage(HCalendarWnd, WM_COPYDATA, (WPARAM)m_hWnd, (LPARAM)&Equipmentdata);  }
 			return;
 		}
 		
@@ -8258,14 +8257,14 @@ void CToDoListWnd::RefreshFilterControls()
 		CFilteredToDoCtrl& tdc = GetToDoCtrl();
 
 		// if this tasklist's filter is an unnamed custom one
-		{ LONGLONG _t = TdlPNow(); RefreshFilterBarCustomFilters(); TdlPLog("      FC:Custom", _t); }
+		{  RefreshFilterBarCustomFilters();  }
 
 		// get existing filter bar size so we can determine if a 
 		// resize if required
 		CRect rFilter;
 
 		m_filterBar.GetClientRect(rFilter);
-		{ LONGLONG _t = TdlPNow(); m_filterBar.RefreshFilterControls(tdc); TdlPLog("      FC:Bar", _t); }
+		{  m_filterBar.RefreshFilterControls(tdc);  }
 
 		CRect rClient;
 		GetClientRect(rClient);
@@ -8287,8 +8286,8 @@ void CToDoListWnd::RefreshFindTasksListData()
 
 	TDCAUTOLISTDATA tldActive, tldAll;
 
-	{ LONGLONG _t = TdlPNow(); m_mgrToDoCtrls.GetAutoListData(tldActive, tldAll); TdlPLog("      FL:GetAutoList", _t); }
-	{ LONGLONG _t = TdlPNow(); m_findDlg.SetAttributeListData(tldActive, tldAll); TdlPLog("      FL:SetAttrData", _t); }
+	{  m_mgrToDoCtrls.GetAutoListData(tldActive, tldAll);  }
+	{  m_findDlg.SetAttributeListData(tldActive, tldAll);  }
 }
 
 TDC_FILE CToDoListWnd::ConfirmSaveTaskList(int nIndex, DWORD dwFlags)
@@ -8385,7 +8384,6 @@ void CToDoListWnd::ShowAllWindowHide()
 		tdc.ShowWindow(SW_HIDE);
 	}
 }
-static bool TdlSelfTestOn();
 
 void CToDoListWnd::ShowAllWindow()
 {
@@ -8398,7 +8396,6 @@ void CToDoListWnd::ShowAllWindow()
 		tdc.ShowWindow((i == GetSelToDoCtrl()) ? SW_SHOW : SW_HIDE);
 	}
 
-	{ LONGLONG _t = TdlPNow(); if (TdlSelfTestOn()) RunViewSelfTest(); TdlPLog("SelfTest", _t); }
 }
 
 BOOL CToDoListWnd::CloseToDoCtrl(int nIndex)
@@ -8543,7 +8540,6 @@ BOOL CToDoListWnd::VerifyTaskListOpen(int nIndex, BOOL bWantNotifyDueTasks)
 	return TRUE;
 }
 
-static bool TdlSelfTestOn();
 
 BOOL CToDoListWnd::SelectToDoCtrl(int nIndex, BOOL bCheckPassword, int nNotifyDueTasksBy)
 {
@@ -8586,7 +8582,7 @@ BOOL CToDoListWnd::SelectToDoCtrl(int nIndex, BOOL bCheckPassword, int nNotifyDu
 	m_tabCtrl.SetCurSel(nIndex); // this changes the selected CToDoCtrl
 	m_tabCtrl.UpdateWindow();
 	
-	{ LONGLONG _t = TdlPNow(); if (!m_bClosing) UpdateToDoCtrlPreferences(); TdlPLog("    ST:UpdPrefs", _t); }
+	{  if (!m_bClosing) UpdateToDoCtrlPreferences();  }
 	
 	const CPreferencesDlg& userPrefs = Prefs();
 
@@ -8594,10 +8590,10 @@ BOOL CToDoListWnd::SelectToDoCtrl(int nIndex, BOOL bCheckPassword, int nNotifyDu
 	if (m_nMaxState == TDCMS_MAXCOMMENTS)
 		m_nMaxState = TDCMS_NORMAL;
 	
-	{ LONGLONG _t = TdlPNow(); tdcShow.SetMaximizeState(m_nMaxState); TdlPLog("    ST:SetMaxState", _t); }
+	{  tdcShow.SetMaximizeState(m_nMaxState);  }
 	tdcShow.EnableWindow(TRUE);
-	{ LONGLONG _t = TdlPNow(); tdcShow.SetFocusToTasks(); TdlPLog("    ST:FocusTasks", _t); }
-	{ LONGLONG _t = TdlPNow(); tdcShow.ShowWindow(SW_SHOW); TdlPLog("    ST:ShowWindow", _t); }
+	{  tdcShow.SetFocusToTasks();  }
+	{  tdcShow.ShowWindow(SW_SHOW);  }
 
 	// if the tasklist is encrypted and todolist always prompts for password
 	// then disable Flip3D and Aero Peek
@@ -8612,7 +8608,7 @@ BOOL CToDoListWnd::SelectToDoCtrl(int nIndex, BOOL bCheckPassword, int nNotifyDu
 		tdcHide.EnableWindow(FALSE);
 	}
 	
-	{ LONGLONG _t = TdlPNow(); tdcShow.Invalidate(TRUE); tdcShow.UpdateWindow(); TdlPLog("    ST:Invalidate", _t); }
+	{  tdcShow.Invalidate(TRUE); tdcShow.UpdateWindow();  }
 	
 	if (!m_bClosing)
 	{
@@ -8631,56 +8627,15 @@ BOOL CToDoListWnd::SelectToDoCtrl(int nIndex, BOOL bCheckPassword, int nNotifyDu
 		UpdateMenuIconMgrSourceControlStatus();
 		UpdateCwd();
 		//李波20191121禁用刷新过滤器控件 m_bShowFilterBar = false;
-		{ LONGLONG _t = TdlPNow(); RefreshFilterControls(); TdlPLog("    ST:FilterCtrls", _t); }
-		{ LONGLONG _t = TdlPNow(); RefreshFindTasksListData(); TdlPLog("    ST:FindList", _t); }
-		{ LONGLONG _t = TdlPNow(); RefreshPauseTimeTracking(); TdlPLog("    ST:PauseTT", _t); }
+		{  RefreshFilterControls();  }
+		{  RefreshFindTasksListData();  }
+		{  RefreshPauseTimeTracking();  }
 
 		DoDueTaskNotification(GetSelToDoCtrl(), nNotifyDueTasksBy);
 	}
 
 	return TRUE;
 }
-
-static bool TdlSelfTestOn()
-{
-	static int s_nOn = -1;
-	if (s_nOn < 0)
-	{
-		char szBuf[8] = { 0 };
-		s_nOn = (GetEnvironmentVariableA("TDL_SELFTEST", szBuf, sizeof(szBuf)) > 0 && szBuf[0] == '1') ? 1 : 0;
-	}
-	return (s_nOn == 1);
-}
-
-void CToDoListWnd::RunViewSelfTest()
-{
-	static bool s_bDone = false;
-	if (s_bDone)
-		return;
-
-	s_bDone = true;
-
-	struct { FTC_VIEW nView; const char* szTag; } aSteps[] =
-	{
-		{ FTCV_UIEXTENSION1, "VT:1_cal_cold" },
-		{ FTCV_UIEXTENSION2, "VT:2_gantt_cold" },
-		{ FTCV_TASKTREE,     "VT:3_tree" },
-		{ FTCV_UIEXTENSION1, "VT:4_cal_warm" },
-		{ FTCV_UIEXTENSION2, "VT:5_gantt_warm" },
-		{ FTCV_TASKTREE,     "VT:6_tree" },
-	};
-
-	CFilteredToDoCtrl& tdc = GetToDoCtrl();
-
-	for (int i = 0; i < _countof(aSteps); i++)
-	{
-		LONGLONG t0 = TdlPNow();
-		tdc.SetView(aSteps[i].nView);
-		tdc.UpdateWindow();
-		TdlPLogI(aSteps[i].szTag, t0, (int)tdc.GetView());
-	}
-}
-
 
 void CToDoListWnd::UpdateAeroFeatures()
 {
@@ -8802,16 +8757,16 @@ void CToDoListWnd::UpdateToDoCtrlPreferences(CFilteredToDoCtrl* pTDC)
 	styles[TDCS_WARNADDDELETEARCHIVE] = userPrefs.GetWarnAddDeleteArchive();
 	styles[TDCS_WEIGHTPERCENTCALCBYNUMSUB] = userPrefs.GetWeightPercentCompletionByNumSubtasks();
 	
-	{ LONGLONG _t = TdlPNow(); tdc.SetStyles(styles); TdlPLog("      UP:SetStyles", _t); }
+	{  tdc.SetStyles(styles);  }
 
 	// layout
-	{ LONGLONG _t = TdlPNow(); tdc.SetLayoutPositions((TDC_UILOCATION)userPrefs.GetControlsPos(), (TDC_UILOCATION)userPrefs.GetCommentsPos(), TRUE); TdlPLog("      UP:Layout", _t); }
+	{  tdc.SetLayoutPositions((TDC_UILOCATION)userPrefs.GetControlsPos(), (TDC_UILOCATION)userPrefs.GetCommentsPos(), TRUE);  }
 	
 	// info tips
 	tdc.SetMaxInfotipCommentsLength(userPrefs.GetMaxInfoTipCommentsLength());
 	
 	// update default task preferences
-	{ LONGLONG _t = TdlPNow(); tdc.SetDefaultTaskAttributes(m_tdiDefault); TdlPLog("      UP:DefAttrib", _t); }
+	{  tdc.SetDefaultTaskAttributes(m_tdiDefault);  }
 
 	// default string lists
 	TDCAUTOLISTDATA tld;
@@ -8850,7 +8805,7 @@ void CToDoListWnd::UpdateToDoCtrlPreferences(CFilteredToDoCtrl* pTDC)
 			m_fontComments.Attach(GraphicsMisc::CreateFont(sFaceName, nFontSize));
 	}
 	
-	{ LONGLONG _t = TdlPNow(); tdc.SetTreeFont(m_fontTree); tdc.SetCommentsFont(m_fontComments); TdlPLog("      UP:Fonts", _t); }
+	{  tdc.SetTreeFont(m_fontTree); tdc.SetCommentsFont(m_fontComments);  }
 	
 	// colours
 	tdc.SetGridlineColor(userPrefs.GetGridlineColor());
@@ -8888,10 +8843,10 @@ void CToDoListWnd::UpdateToDoCtrlPreferences(CFilteredToDoCtrl* pTDC)
 	userPrefs.GetCompletionStatus(sStatus);
 	tdc.SetCompletionStatus(sStatus);
 	
-	{ LONGLONG _t = TdlPNow(); tdc.Flush(); TdlPLog("      UP:Flush", _t); } // clear any outstanding issues
+	{  tdc.Flush();  } // clear any outstanding issues
 
 	// we're done
-	{ LONGLONG _t = TdlPNow(); tdc.NotifyEndPreferencesUpdate(); TdlPLog("      UP:EndNotify", _t); }
+	{  tdc.NotifyEndPreferencesUpdate();  }
 }
 
 void CToDoListWnd::OnSaveall() 

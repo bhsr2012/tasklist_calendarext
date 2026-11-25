@@ -22,7 +22,6 @@
 
 #include "..\Interfaces\IPreferences.h"
 
-#include "calprof.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -960,8 +959,8 @@ LRESULT CCalendarWnd::OnBigCalendarNotifySelectionChange(WPARAM /*wp*/, LPARAM l
 {
 	if (lp)
 	{
-		{ LONGLONG _t = CalPNow(); UpdateSelectedTaskDates(); CalPLog("    CW:Sel.dates", _t); }
-		{ LONGLONG _t = CalPNow(); GetParent()->SendMessage(WM_IUI_SELECTTASK, 0, lp); CalPLog("    CW:Sel.send", _t); }
+		{  UpdateSelectedTaskDates();  }
+		{  GetParent()->SendMessage(WM_IUI_SELECTTASK, 0, lp);  }
 	}
 
 	return 0L;

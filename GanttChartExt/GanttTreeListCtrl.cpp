@@ -3,7 +3,6 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "ganttprof.h"
 #include "resource.h"
 #include "GanttTreeListCtrl.h"
 
@@ -449,7 +448,6 @@ void CGanttTreeListCtrl::SetExpandedState(const CDWordArray& aExpanded)
 
 void CGanttTreeListCtrl::UpdateTasks(const ITaskList* pTasks, IUI_UPDATETYPE nUpdate, int nEditAttribute)
 {
-	LONGLONG _gUT = CalPNow();
 	// we must have been initialized already
 	ASSERT(m_hwndList && m_hwndTree);
 
@@ -467,20 +465,20 @@ void CGanttTreeListCtrl::UpdateTasks(const ITaskList* pTasks, IUI_UPDATETYPE nUp
 			CGanttLockUpdates glu(this, TRUE, TRUE);
 			
 			CDWordArray aExpanded;
-			{ LONGLONG _g = CalPNow(); GetExpandedState(aExpanded); CalPLog("GP:GetExpanded", _g); }
+			{  GetExpandedState(aExpanded);  }
 			
 			DWORD dwSelID = GetSelectedTaskID();
 		
-			{ LONGLONG _g = CalPNow(); RebuildTree(pTasks14); CalPLog("GP:RebuildTree", _g); }
-			{ LONGLONG _g = CalPNow(); UpdateListColumns(); CalPLog("GP:UpdListCols", _g); }
+			{  RebuildTree(pTasks14);  }
+			{  UpdateListColumns();  }
 			
-			{ LONGLONG _g = CalPNow(); SetExpandedState(aExpanded); CalPLog("GP:SetExpanded", _g); }
-			{ LONGLONG _g = CalPNow(); SelectTask(dwSelID); CalPLog("GP:SelectTask", _g); }
+			{  SetExpandedState(aExpanded);  }
+			{  SelectTask(dwSelID);  }
 
-			{ LONGLONG _g = CalPNow(); if (dwSelID)
+			{  if (dwSelID)
 				ScrollToSelectedTask();
 			else
-				ScrollToToday(); CalPLog("GP:ScrollTo", _g); }
+				ScrollToToday();  }
 
 		
 			nRecalcCol = TDCA_ALL;
@@ -536,16 +534,15 @@ void CGanttTreeListCtrl::UpdateTasks(const ITaskList* pTasks, IUI_UPDATETYPE nUp
 		ASSERT(0);
 	}
 	
-	{ LONGLONG _g = CalPNow(); InitItemHeights(); CalPLog("GP:InitHeights", _g); }
-	{ LONGLONG _g = CalPNow(); RecalcTreeColumns(nRecalcCol, TRUE); CalPLog("GP:RecalcCols", _g); }
+	{  InitItemHeights();  }
+	{  RecalcTreeColumns(nRecalcCol, TRUE);  }
 
 	if (bResort)
-		{ LONGLONG _g = CalPNow(); Sort(m_nSortBy, FALSE); CalPLog("GP:Sort", _g); }
+		{  Sort(m_nSortBy, FALSE);  }
 
 	// measure from the data model again once the rebuild is done
 	m_bLongestCached = FALSE;
 
-	CalPLog("GP:UpdateTasks", _gUT);
 }
 
 CString CGanttTreeListCtrl::GetTaskAllocTo(const ITaskList14* pTasks, HTASKITEM hTask)
@@ -810,14 +807,8 @@ GANTTDISPLAY* CGanttTreeListCtrl::GetGanttDisplay(DWORD dwTaskID)
 	return pGD;
 }
 
-static __int64 s_gAttr = 0, s_gIns = 0, s_gData = 0, s_gMap = 0;
-static int s_nInsN = 0;
-static int s_nDispN = 0;
 void CGanttTreeListCtrl::RebuildTree(const ITaskList14* pTasks)
 {
-	s_gAttr = s_gIns = s_gData = s_gMap = 0;
-	s_nInsN = 0;
-	s_nDispN = 0;
 	CTreeCtrl* pTree = (CTreeCtrl*)CWnd::FromHandle(m_hwndTree);
 
 	TreeView_DeleteAllItems(m_hwndTree);
@@ -829,7 +820,7 @@ void CGanttTreeListCtrl::RebuildTree(const ITaskList14* pTasks)
 	// Set the final column widths while the tree is still empty, so the
 	// post-build RecalcTreeColumns() finds nothing to change and therefore
 	// never calls Resize() - which re-lays out every row (1.5s at 10k rows).
-	{ LONGLONG _g = CalPNow(); PrecalcTreeColumnWidths(pTasks); CalPLog("GP:PreCalcCols", _g); }
+	{  PrecalcTreeColumnWidths(pTasks);  }
 
 	// cache and reset year range which will get 
 	// recalculated as we build the tree
@@ -857,9 +848,7 @@ void CGanttTreeListCtrl::RebuildTree(const ITaskList14* pTasks)
 		}
 	}
 
-	LONGLONG _g = CalPNow();
 	BuildTreeItem(pTasks, pTasks->GetFirstTask(), *pTree, NULL, TRUE);
-	CalPLog("GP:BuildTree", _g);
 
 	// restore previous date range if no data
 	if (m_data.GetCount() == 0)
@@ -868,9 +857,8 @@ void CGanttTreeListCtrl::RebuildTree(const ITaskList14* pTasks)
 		m_dtLatest = dtPrevLatest;
 	}
 
-	{ char _b[256]; sprintf(_b, "GP:parts attr=%.0f map=%.0f ins=%.0f setdata=%.0f disp=%d", (double)s_gAttr * 1000.0 / (double)CalPFreq(), (double)s_gMap * 1000.0 / (double)CalPFreq(), (double)s_gIns * 1000.0 / (double)CalPFreq(), (double)s_gData * 1000.0 / (double)CalPFreq(), s_nDispN); CalPLog(_b, CalPNow()); }
-	{ LONGLONG _g = CalPNow(); RecalcParentDates(); CalPLog("GP:RebuildParents", _g); }
-	{ LONGLONG _g = CalPNow(); ExpandListAppendOnly(); CalPLog("GP:ExpandList", _g); }
+	RecalcParentDates();
+	ExpandListAppendOnly();
 }
 
 COleDateTime CGanttTreeListCtrl::GetDate(time64_t tDate, BOOL bEndOfDay)
@@ -898,7 +886,6 @@ void CGanttTreeListCtrl::BuildTreeItem(const ITaskList14* pTasks, HTASKITEM hTas
 		return;
 
 	// map the data
-	__int64 _tA = CalPNow();
 	GANTTITEM* pGI = new GANTTITEM;
 	time64_t tDate = 0;
 	
@@ -936,27 +923,14 @@ void CGanttTreeListCtrl::BuildTreeItem(const ITaskList14* pTasks, HTASKITEM hTas
 		MinMaxDates(*pGI);
 	}
 	
-	s_gAttr += (CalPNow() - _tA);
-	__int64 _tM = CalPNow();
 	DWORD dwTaskID = pTasks->GetTaskID(hTask);
 	ASSERT(!m_data.HasTask(dwTaskID));
 
 	m_data[dwTaskID] = pGI;
-	s_gMap += (CalPNow() - _tM);
 	
 	// add item to tree
-	__int64 _tI = CalPNow();
 	HTREEITEM hti = tree.InsertItem(LPSTR_TEXTCALLBACK, htiParent);
-	s_gIns += (CalPNow() - _tI);
-	if (CalPEnabled() && (++s_nInsN % 1000) == 0)
-	{
-		char _b[96];
-		sprintf(_b, "GP:ins@%d cum=%.0f", s_nInsN, (double)s_gIns * 1000.0 / (double)CalPFreq());
-		CalPLog(_b, CalPNow());
-	}
-	__int64 _tD = CalPNow();
 	tree.SetItemData(hti, dwTaskID);
-	s_gData += (CalPNow() - _tD);
 	
 	// add first child which will add all the rest
 	BuildTreeItem(pTasks, pTasks->GetFirstTask(hTask), tree, hti, TRUE);
@@ -1900,7 +1874,6 @@ LRESULT CGanttTreeListCtrl::WindowProc(HWND hRealWnd, UINT msg, WPARAM wp, LPARA
 
 						if (pDispInfo->item.mask & TVIF_TEXT)
 						{
-							s_nDispN++;
 							DWORD dwTaskID = pDispInfo->item.lParam;
 
 							const GANTTITEM* pGI = NULL;
@@ -4202,9 +4175,7 @@ BOOL CGanttTreeListCtrl::RecalcTreeColumns(int nEditAttribute, BOOL bResize)
 		// 10k task list. Skip it unless a column width really changed.
 		if (bResize && bWidthChanged)
 		{
-			LONGLONG _tR = CalPNow();
 			Resize();
-			CalPLog("GP:RecalcCols.Resize", _tR);
 		}
 
 		return TRUE;

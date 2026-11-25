@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include "tdlprof.h"
 #include "ToDoCtrl.h"
 #include "tdlschemadef.h"
 #include "taskfile.h"
@@ -1986,8 +1985,6 @@ void CToDoCtrl::UpdateSelectedTaskPath()
 
 void CToDoCtrl::UpdateControls(BOOL bIncComments, HTREEITEM hti)
 {
-	LONGLONG _tUC = TdlPNow();
-	TdlPLog("      UC:00entry", _tUC);
 	if (!hti)
 		hti = GetSelectedItem();
 
@@ -2006,31 +2003,30 @@ void CToDoCtrl::UpdateControls(BOOL bIncComments, HTREEITEM hti)
 	
 	if (hti)
 	{
-		int nSelCount = GetSelectedCount(); { LONGLONG _t = TdlPNow(); GetTrueTaskID(hti); TdlPLog("        UC:b0.trueid", _t); }
+		int nSelCount = GetSelectedCount(); {  GetTrueTaskID(hti);  }
 		DWORD dwTaskID = GetTrueTaskID(hti); 
 
 		BOOL bMaximize = (m_nMaxState != TDCMS_NORMAL);
 		BOOL bEnable = (hti && !bMaximize);
-		{ LONGLONG _t = TdlPNow(); GetSelectedCount(); TdlPLog("        UC:b0.selcount", _t); }
+		{  GetSelectedCount();  }
 		BOOL bIsParent = FALSE;
-		{ LONGLONG _t = TdlPNow(); bIsParent = TSH().ItemsAreAllParents(); TdlPLog("        UC:b0.allparents", _t); }
+		{  bIsParent = TSH().ItemsAreAllParents();  }
 		BOOL bAveSubTaskCompletion = HasStyle(TDCS_AVERAGEPERCENTSUBCOMPLETION) && bIsParent;
 		BOOL bEditTime = !bIsParent || HasStyle(TDCS_ALLOWPARENTTIMETRACKING);
 		BOOL bEditPercent = !HasStyle(TDCS_AUTOCALCPERCENTDONE) && (nSelCount > 1 || !bAveSubTaskCompletion);
 
-		{ LONGLONG _t = TdlPNow(); m_nPriority = (int)GetSelectedTaskPriority(); TdlPLog("        UC:b1.prio", _t); }
-		{ LONGLONG _t = TdlPNow(); m_nRisk = (int)GetSelectedTaskRisk(); TdlPLog("        UC:b1.risk", _t); }
-		{ LONGLONG _t = TdlPNow(); m_sAllocBy = GetSelectedTaskAllocBy(); TdlPLog("        UC:b1.allocby", _t); }
-		{ LONGLONG _t = TdlPNow(); m_sStatus = GetSelectedTaskStatus(); TdlPLog("        UC:b1.status", _t); }
-		{ LONGLONG _t = TdlPNow(); m_sExternalID = GetSelectedTaskExtID(); TdlPLog("        UC:b1.extid", _t); }
-		{ LONGLONG _t = TdlPNow(); m_sVersion = GetSelectedTaskVersion(); TdlPLog("        UC:b1.ver", _t); }
-		{ LONGLONG _t = TdlPNow(); m_crColour = GetSelectedTaskColor(); TdlPLog("        UC:b1.color", _t); }
-		{ LONGLONG _t = TdlPNow(); m_dCost = GetSelectedTaskCost(); TdlPLog("        UC:b1.cost", _t); }
-		{ LONGLONG _t = TdlPNow(); m_sEquipment = GetSelectedTaskEquipment(); TdlPLog("        UC:b1.equip", _t); }
-		{ LONGLONG _t = TdlPNow(); m_eEquipment.SetWindowText(m_sEquipment); TdlPLog("        UC:b1.equip.set", _t); }
-		{ LONGLONG _t = TdlPNow(); m_sAmount = GetSelectedTaskAmount(); TdlPLog("        UC:b1.amount", _t); }
-		{ LONGLONG _t = TdlPNow(); m_eAmount.SetWindowText(m_sAmount); TdlPLog("        UC:b1.amount.set", _t); }
-		TdlPLog("      UC:01basic", _tUC);
+		{  m_nPriority = (int)GetSelectedTaskPriority();  }
+		{  m_nRisk = (int)GetSelectedTaskRisk();  }
+		{  m_sAllocBy = GetSelectedTaskAllocBy();  }
+		{  m_sStatus = GetSelectedTaskStatus();  }
+		{  m_sExternalID = GetSelectedTaskExtID();  }
+		{  m_sVersion = GetSelectedTaskVersion();  }
+		{  m_crColour = GetSelectedTaskColor();  }
+		{  m_dCost = GetSelectedTaskCost();  }
+		{  m_sEquipment = GetSelectedTaskEquipment();  }
+		{  m_eEquipment.SetWindowText(m_sEquipment);  }
+		{  m_sAmount = GetSelectedTaskAmount();  }
+		{  m_eAmount.SetWindowText(m_sAmount);  }
  
 
 		//设置优先级
@@ -2049,7 +2045,6 @@ void CToDoCtrl::UpdateControls(BOOL bIncComments, HTREEITEM hti)
 			m_sTextComments = GetSelectedTaskComments();
 			m_customComments = GetSelectedTaskCustomComments(sCommentsType);
 		}
-		TdlPLog("      UC:02comments", _tUC);
 		
 		// special cases
 		GetSelectedTaskCategories(m_aCategory);
@@ -2061,7 +2056,6 @@ void CToDoCtrl::UpdateControls(BOOL bIncComments, HTREEITEM hti)
 		CStringArray aDepends;
 		GetSelectedTaskDependencies(aDepends);
 		m_sDepends = Misc::FormatArray(aDepends);
-		TdlPLog("      UC:03arrays", _tUC);
 
 		
 		if (bEditTime)
@@ -2082,7 +2076,6 @@ void CToDoCtrl::UpdateControls(BOOL bIncComments, HTREEITEM hti)
 		m_eTimeSpent.CheckButton(ID_TIME_TRACK, (dwTaskID == m_dwTimeTrackTaskID));
 		m_eTimeSpent.EnableButton(ID_TIME_TRACK, bEditTime && bEnable && !bReadOnly && 
 									nSelCount == 1 && m_data.IsTaskTimeTrackable(dwTaskID));
-		TdlPLog("      UC:04time", _tUC);
 
 		// dependency link button
 		m_eDependency.EnableButton(ID_DEPENDS_LINK, bEnable && !m_sDepends.IsEmpty());
@@ -2097,7 +2090,6 @@ void CToDoCtrl::UpdateControls(BOOL bIncComments, HTREEITEM hti)
 			m_nPercentDone = GetSelectedTaskPercent();
 		else
 			m_nPercentDone = m_data.CalcPercentDone(dwTaskID);		
-		TdlPLog("      UC:05percent", _tUC);
 		
 		// special handling for start date/time
 		COleDateTime dateStart = GetSelectedTaskDate(TDCD_START);
@@ -2113,7 +2105,6 @@ void CToDoCtrl::UpdateControls(BOOL bIncComments, HTREEITEM hti)
 		COleDateTime dateDone = GetSelectedTaskDate(TDCD_DONE);
 		SetCtrlDate(m_dtcDone, dateDone);
 		m_cbTimeDone.SetOleTime(dateDone.m_dt);
-		TdlPLog("      UC:06dates", _tUC);
 
 		// recurrence
 		GetSelectedTaskRecurrence(m_tRecurrence);
@@ -2126,7 +2117,6 @@ void CToDoCtrl::UpdateControls(BOOL bIncComments, HTREEITEM hti)
 
 		// custom attributes
 		GetSelectedTaskCustomAttributeData(m_mapCustomCtrlData, FALSE);
-		TdlPLog("      UC:07custom", _tUC);
 	}
 	else // clear controls
 	{
@@ -2163,10 +2153,8 @@ void CToDoCtrl::UpdateControls(BOOL bIncComments, HTREEITEM hti)
 		m_mapCustomCtrlData.RemoveAll();
 	}
 
-	TdlPLog("      UC:gather", _tUC);
 	// update data controls excluding comments
 	UpdateData(FALSE);
-	TdlPLog("      UC:UpdateData", _tUC);
 	//设置优先级
 	m_cbPriority.SetSelectedPriority((int)GetSelectedTaskPriority());
 
@@ -2192,7 +2180,6 @@ void CToDoCtrl::UpdateControls(BOOL bIncComments, HTREEITEM hti)
 	
 	// show hide controls
 	EnableDisableControls(hti);
-	TdlPLog("      UC:EnableDisable", _tUC);
 	
 	m_treeDragDrop.EnableDragDrop(!bReadOnly);
 }
@@ -6144,7 +6131,7 @@ TDC_FILE CToDoCtrl::Load(const CString& sFilePath, CTaskFile& tasks/*out*/)
 	// store format for when we save
 	m_bIsUnicode = tasks.IsFileUnicode();
 	
-	BOOL _bLoadEx; { LONGLONG _t = TdlPNow(); _bLoadEx = tasks.LoadEx(); TdlPLog("  L:LoadEx", _t); }
+	BOOL _bLoadEx; {  _bLoadEx = tasks.LoadEx();  }
 	if (_bLoadEx)
 	{
 		tasks.Close();
@@ -6180,7 +6167,7 @@ TDC_FILE CToDoCtrl::Load(const CString& sFilePath, CTaskFile& tasks/*out*/)
 
  
 			//李波这里很慢
-			{ LONGLONG _t = TdlPNow(); LoadTasks(tasks); TdlPLog("  L:LoadTasks", _t); }
+			{  LoadTasks(tasks);  }
 
 			//LoadTaskIcons();
 
@@ -6332,7 +6319,7 @@ BOOL CToDoCtrl::LoadTasks(const CTaskFile& file)
 		
 		//TickCounts.push_back(GetTickCount());
 		//李波 这里很慢
-		HTREEITEM htiFirst; { LONGLONG _t = TdlPNow(); htiFirst = SetAllTasks(file); TdlPLog("    LT:SetAllTasks", _t); }  //这里会调用 RebuildTree 会比较慢 520ms
+		HTREEITEM htiFirst; {  htiFirst = SetAllTasks(file);  }  //这里会调用 RebuildTree 会比较慢 520ms
 		//TickCounts.push_back(GetTickCount());
 
 		// reset cached calcs after loading but before sorting
@@ -6341,7 +6328,7 @@ BOOL CToDoCtrl::LoadTasks(const CTaskFile& file)
 		if (m_taskTree.GetItemCount())
 		{
 			// restore last tree state
-			{ LONGLONG _t = TdlPNow(); htiSel = LoadTasksState(prefs); TdlPLog("    LT:LoadTasksState", _t); }  //这里比较慢  300ms
+			{  htiSel = LoadTasksState(prefs);  }  //这里比较慢  300ms
 			//TickCounts.push_back(GetTickCount());
 			// redo last sort
 			if (IsSorting())
@@ -8546,13 +8533,13 @@ void CToDoCtrl::SelectItem(HTREEITEM hti)
 		
 		m_taskTree.SetScrollOnSelect(bTreeFocused);
 		
-		{ LONGLONG _t = TdlPNow(); if (!m_taskTree.SelectItem(hti))
+		{  if (!m_taskTree.SelectItem(hti))
 			UpdateControls(); // disable controls
-		TdlPLog("    TDC:TreeSelect", _t); }
+		 }
 		
 		m_taskTree.SetScrollOnSelect(TRUE);
 		
-		{ LONGLONG _t = TdlPNow(); UpdateSelectedTaskPath(); TdlPLog("    TDC:SelPath", _t); }
+		{  UpdateSelectedTaskPath();  }
 		
 		m_treeDragDrop.EnableDragDrop(!IsReadOnly());
 		::SendMessage(hFocus, WM_SETFOCUS, 0, 0);
@@ -8676,58 +8663,20 @@ void CToDoCtrl::AppendTaskFileHeader(CTaskFile& tasks) const
 	
 }
 
-// ---- TDL copy profiling (ASCII only, gated by TDL_PROF) ----
-static __int64 g_tdlTNew = 0, g_tdlTAttr = 0, g_tdlTSetAttrs = 0, g_tdlTCalcs = 0;
-static int g_tdlNCopy = 0, g_tdlDepthMax = 0, g_tdlDepthCur = 0;
-
-static void TdlCopyReset()
-{
-	g_tdlTNew = g_tdlTAttr = g_tdlTSetAttrs = g_tdlTCalcs = 0;
-	g_tdlNCopy = 0; g_tdlDepthMax = 0; g_tdlDepthCur = 0;
-}
-
-static void TdlCopyDump()
-{
-	if (!TdlPEnabled())
-		return;
-
-	double f = (double)TdlPFreq();
-	TdlPLogMs("   GA:sum_NewTask", (double)g_tdlTNew * 1000.0 / f);
-	TdlPLogMs("   GA:sum_SetAllAttr", (double)g_tdlTAttr * 1000.0 / f);
-	TdlPLogMs("   GA:sum_SetTaskAttrs", (double)g_tdlTSetAttrs * 1000.0 / f);
-	TdlPLogMs("   GA:sum_Calcs", (double)g_tdlTCalcs * 1000.0 / f);
-	TdlPLogI("   GA:count", TdlPNow(), g_tdlNCopy);
-	TdlPLogI("   GA:depth", TdlPNow(), g_tdlDepthMax);
-}
-
 int CToDoCtrl::GetAllTasks(CTaskFile& tasks) const
 {
 	ASSERT(tasks.GetTaskCount() == 0);
 
-	if (TdlPEnabled())
-	{
-		char _b[96];
-		sprintf(_b, "   GA:caller@%Ix", (size_t)_ReturnAddress() - (size_t)::GetModuleHandle(NULL));
-		TdlPLog(_b, TdlPNow());
-	}
-
-	TdlCopyReset();
-	LONGLONG _tGA0 = TdlPNow();
-
 	// and custom attributes
 	SaveCustomAttributeDefinitions(tasks);
-	TdlPLog("   GA:CustomAttribs", _tGA0);
 
 	tasks.EnableISODates(HasStyle(TDCS_SHOWDATESINISO));
 
 	// build task file from data structure not the tree
-	LONGLONG _tGA1 = TdlPNow();
 
 	if (AddSubTasksToTaskFile(m_data.GetStructure(), tasks, NULL))
 	{
 		tasks.SetSaveAs(GetSaveAs(m_bIsUnicode));
-		TdlPLog("   GA:BuildAll", _tGA1);
-		TdlCopyDump();
 		return tasks.GetTaskCount();
 	}
 	
@@ -8772,35 +8721,18 @@ BOOL CToDoCtrl::AddTaskToTaskFile(const TODOITEM* pTDI, const TODOSTRUCTURE* pTD
    CString sTitle = pTDI->sTitle;
    DWORD dwTaskID = pTDS->GetTaskID();
 
-   LONGLONG _tNT = TdlPNow();
    HTASKITEM hTask = tasks.NewTask(sTitle, hParentTask, dwTaskID);
-   g_tdlTNew += TdlPNow() - _tNT;
-
-   g_tdlNCopy++;
-   g_tdlDepthCur++;
-
-   if (g_tdlDepthCur > g_tdlDepthMax)
-      g_tdlDepthMax = g_tdlDepthCur;
 
    ASSERT(hTask);
 
    if (!hTask)
-   {
-      g_tdlDepthCur--;
       return FALSE;
-   }
 
    // copy all other attributes
-   LONGLONG _tSA = TdlPNow();
    SetAllTaskAttributes(pTDI, pTDS, tasks, hTask);
-   g_tdlTAttr += TdlPNow() - _tSA;
 
    // copy children
-   BOOL bRet = AddSubTasksToTaskFile(pTDS, tasks, hTask);
-
-   g_tdlDepthCur--;
-
-   return bRet;
+   return AddSubTasksToTaskFile(pTDS, tasks, hTask);
 }
 
 void CToDoCtrl::HandleUnsavedComments()
@@ -8821,14 +8753,10 @@ HTREEITEM CToDoCtrl::SetAllTasks(const CTaskFile& tasks)
 	m_taskTree.DeleteAll();
 
 	// 李波 这里很慢 Build data structure first 
-	LONGLONG _tBDM = TdlPNow();
 	m_data.BuildDataModel(tasks);
-	TdlPLog("      SAT:BuildDataModel", _tBDM);
 
 	// 李波 这里很慢 Then tree structure
-	LONGLONG _tRT = TdlPNow();
 	HTREEITEM htiRT = RebuildTree();
-	TdlPLog("      SAT:RebuildTree", _tRT);
 
 	return htiRT;
 }
@@ -9562,11 +9490,8 @@ BOOL CToDoCtrl::SetAllTaskAttributes(const TODOITEM* pTDI, const TODOSTRUCTURE* 
 	}
 
 	// 'true' tasks
-	LONGLONG _tST = TdlPNow();
 	file.SetTaskAttributes(hTask, pTDI);
-	g_tdlTSetAttrs += TdlPNow() - _tST;
 
-	LONGLONG _tCL = TdlPNow();
 
 	// dynamically calculated attributes
 	int nHighestPriority = m_data.GetHighestPriority(pTDI, pTDS, FALSE); 
@@ -9646,7 +9571,6 @@ BOOL CToDoCtrl::SetAllTaskAttributes(const TODOITEM* pTDI, const TODOSTRUCTURE* 
 		file.SetTaskSubtaskCompletion(hTask, sSubtasksDone);
 	}
 	
-	g_tdlTCalcs += TdlPNow() - _tCL;
 
 	return TRUE;
 }
@@ -9791,9 +9715,9 @@ void CToDoCtrl::SetFocusToTasks()
 	}
 
 	// ensure the selected tree item is visible
-	BOOL _bSV2; { LONGLONG _t = TdlPNow(); _bSV2 = m_taskTree.EnsureSelectionVisible(); TdlPLog("        SV2:EnsureSelVis", _t); }
+	BOOL _bSV2; {  _bSV2 = m_taskTree.EnsureSelectionVisible();  }
 	if (!_bSV2)
-		{ LONGLONG _t = TdlPNow(); SelectItem(m_taskTree.GetChildItem()); TdlPLog("        SV2:SelectItem", _t); }
+		{  SelectItem(m_taskTree.GetChildItem());  }
 }
 
 void CToDoCtrl::SetFocusToComments()

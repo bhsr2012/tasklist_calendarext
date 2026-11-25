@@ -3,7 +3,6 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "tdlprof.h"
 #include "TabbedToDoCtrl.h"
 #include "todoitem.h"
 #include "resource.h"
@@ -132,8 +131,6 @@ void CTabbedToDoCtrl::DoDataExchange(CDataExchange* pDX)
 
 void CTabbedToDoCtrl::InvalidateTaskSnapshot(const char* szFrom)
 {
-	if (TdlPEnabled())
-		TdlPLog(szFrom && *szFrom ? szFrom : "   SN:invalidate", TdlPNow());
 	m_bTasksSnapshotValid = FALSE;
 }
 
@@ -584,11 +581,11 @@ LRESULT CTabbedToDoCtrl::OnPreTabViewChange(WPARAM nOldView, LPARAM nNewView)
 			if (pLVData->bNeedResort)
 			{
 				pLVData->bNeedResort = FALSE;
-				{ LONGLONG _t = TdlPNow(); m_taskList.Resort(); TdlPLog("      PV:Resort", _t); }
+				{  m_taskList.Resort();  }
 			}
 			
-			{ LONGLONG _t = TdlPNow(); ResyncListSelection(); TdlPLog("      PV:ResyncSel", _t); }
-			{ LONGLONG _t = TdlPNow(); m_taskList.EnsureSelectionVisible(); TdlPLog("      PV:EnsureVis", _t); }
+			{  ResyncListSelection();  }
+			{  m_taskList.EnsureSelectionVisible();  }
 		}
 		break;
 
@@ -645,11 +642,11 @@ LRESULT CTabbedToDoCtrl::OnPreTabViewChange(WPARAM nOldView, LPARAM nNewView)
 				{
 					m_tasksSnapshot.Reset();
 
-					{ LONGLONG _t = TdlPNow(); GetAllTasks(m_tasksSnapshot); TdlPLog("   DT:GetAllTasks", _t); }
+					{  GetAllTasks(m_tasksSnapshot);  }
 					m_bTasksSnapshotValid = TRUE;
 				}
 
-				{ LONGLONG _t = TdlPNow(); UpdateExtensionView(pExtWnd, m_tasksSnapshot, IUI_ALL); TdlPLog("   DT:UpdateExt(reused)", _t); }
+				{  UpdateExtensionView(pExtWnd, m_tasksSnapshot, IUI_ALL);  }
 				pData->bNeedTaskUpdate = FALSE;
 			}
 				
@@ -878,7 +875,7 @@ void CTabbedToDoCtrl::SetView(FTC_VIEW nView)
 	// so that we can prevent unnecessary calls to UpdateControls
 
 	//李波 这里非常慢
-	{ LONGLONG _t = TdlPNow(); BOOL _b = m_tabViews.SetActiveView(nView, TRUE); TdlPLogI("     SV:ActiveView", _t, (int)nView); if (!_b) return; }
+	{  BOOL _b = m_tabViews.SetActiveView(nView, TRUE);  if (!_b) return; }
   
 	//IUIExtensionWindow* pExtWnd = GetExtensionWnd(nView);
 	//if (pExtWnd)
@@ -886,9 +883,9 @@ void CTabbedToDoCtrl::SetView(FTC_VIEW nView)
 	//	pExtWnd->SetCurrentView(nView);
 	//}
  
-	DWORD dwSelTaskID; { LONGLONG _t = TdlPNow(); dwSelTaskID = GetSingleSelectedTaskID(); TdlPLog("     SV:getSel", _t); }
-	{ LONGLONG _t = TdlPNow(); SelectTask(dwSelTaskID, true); TdlPLog("     SV:SelectTask", _t); }
-	{ LONGLONG _t = TdlPNow(); if (HasSingleSelectionChanged(dwSelTaskID)) UpdateControls(); TdlPLog("     SV:UpdateControls", _t); }
+	DWORD dwSelTaskID; {  dwSelTaskID = GetSingleSelectedTaskID();  }
+	{  SelectTask(dwSelTaskID, true);  }
+	{  if (HasSingleSelectionChanged(dwSelTaskID)) UpdateControls();  }
 }
 
 void CTabbedToDoCtrl::SetNextView() 
@@ -912,7 +909,7 @@ LRESULT CTabbedToDoCtrl::OnUIExtSelectTask(WPARAM /*wParam*/, LPARAM lParam)
 		DWORD dwTaskID = (DWORD)lParam;
 
 		if (HasSingleSelectionChanged(dwTaskID))
-		{ LONGLONG _t = TdlPNow(); BOOL b = SelectTask(dwTaskID); TdlPLog("    TDC:UIExtSel", _t); return b; }
+		{  BOOL b = SelectTask(dwTaskID);  return b; }
 	}
 
 	// else
@@ -1642,10 +1639,9 @@ void CTabbedToDoCtrl::NotifyBeginPreferencesUpdate()
 
 void CTabbedToDoCtrl::NotifyEndPreferencesUpdate()
 {
-	LONGLONG _tNE = TdlPNow();
 
 	// base class
-	{ LONGLONG _t = TdlPNow(); CToDoCtrl::NotifyEndPreferencesUpdate(); TdlPLog("      NE:base", _t); }
+	{  CToDoCtrl::NotifyEndPreferencesUpdate();  }
 
 	// notify extension windows
 	if (HasAnyExtensionViews())
@@ -1679,7 +1675,7 @@ void CTabbedToDoCtrl::NotifyEndPreferencesUpdate()
 					BeginExtensionProgress(pData);
 
 				// notify all extensions of prefs change
-				{ LONGLONG _t = TdlPNow(); pExtWnd->LoadPreferences(&prefs, sKey, TRUE); TdlPLogI("        NE:LoadPrefs", _t, nExt); }
+				{  pExtWnd->LoadPreferences(&prefs, sKey, TRUE);  }
 
 				// Update task colours if necessary
 				if (bWantColorUpdate)
@@ -1690,9 +1686,9 @@ void CTabbedToDoCtrl::NotifyEndPreferencesUpdate()
 						filter.aAttribs.Add(TDCA_COLOR);
 						
 						CTaskFile tasks;
-						{ LONGLONG _t = TdlPNow(); GetTasks(tasks, filter); TdlPLogI("          NE:GetTasks", _t, nExt); }
+						{  GetTasks(tasks, filter);  }
 						
-						{ LONGLONG _t = TdlPNow(); UpdateExtensionView(pExtWnd, tasks, IUI_EDIT, TDCA_COLOR); TdlPLogI("          NE:UpdExt", _t, nExt); }
+						{  UpdateExtensionView(pExtWnd, tasks, IUI_EDIT, TDCA_COLOR);  }
 						pData->bNeedTaskUpdate = FALSE;
 					}
 					else // mark for update
@@ -1708,7 +1704,6 @@ void CTabbedToDoCtrl::NotifyEndPreferencesUpdate()
 		}
 	}
 
-	TdlPLog("    NE:extloop_done", _tNE);
 
 	m_bTaskColorChange = FALSE; // always
 }

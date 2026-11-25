@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include "tdlprof.h"
 #include "TDCViewTabControl.h"
 #include "tdcmsg.h"
 
@@ -532,20 +531,20 @@ BOOL CTDCViewTabControl::DoTabChange(int nOldTab, int nNewTab, BOOL bNotify)
 	if (bNotify)
 	{
 		//ÕâÀïºÜÂý
-		BOOL bCancel; { LONGLONG _t = TdlPNow(); bCancel = GetParent()->SendMessage(WM_TDCN_VIEWPRECHANGE, GetTabView(nOldTab), GetTabView(nNewTab)); TdlPLog("      DT:PreChange", _t); }
+		BOOL bCancel; {  bCancel = GetParent()->SendMessage(WM_TDCN_VIEWPRECHANGE, GetTabView(nOldTab), GetTabView(nNewTab));  }
 
 		if (bCancel)
 			return FALSE;
 	}
 
-	BOOL bSwitched; { LONGLONG _t = TdlPNow(); bSwitched = SwitchToTab(nNewTab); TdlPLog("      DT:SwitchToTab", _t); }
+	BOOL bSwitched; {  bSwitched = SwitchToTab(nNewTab);  }
 	if (bSwitched)
 	{
 		ASSERT (nOldTab != m_nSelTab);
 
 		// notify parent after the change
 		if (bNotify)
-			{ LONGLONG _t = TdlPNow(); GetParent()->SendMessage(WM_TDCN_VIEWPOSTCHANGE, GetTabView(nOldTab), GetTabView(nNewTab)); TdlPLog("      DT:PostChange", _t); }
+			{  GetParent()->SendMessage(WM_TDCN_VIEWPOSTCHANGE, GetTabView(nOldTab), GetTabView(nNewTab));  }
 
 		// restore focus		
 		int nNewIndex = TabToIndex(nNewTab);

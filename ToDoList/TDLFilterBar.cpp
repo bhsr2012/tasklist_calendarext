@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include "tdlprof.h"
 #include "resource.h"
 #include "TDLFilterBar.h"
 #include "tdcmsg.h"
@@ -387,7 +386,7 @@ void CTDLFilterBar::RefreshFilterControls(const CFilteredToDoCtrl& tdc)
 	
 	// alloc to filter
 	TDCAUTOLISTDATA tld;
-	{ LONGLONG _t = TdlPNow(); tdc.GetAutoListData(tld); TdlPLog("        FB:GetAutoList", _t); }
+	{  tdc.GetAutoListData(tld);  }
 
 	// batch the combo repopulation
 	// repopulating 6 combos with thousands of unique values is very expensive
@@ -399,27 +398,27 @@ void CTDLFilterBar::RefreshFilterControls(const CFilteredToDoCtrl& tdc)
 
 	SetRedraw(FALSE);
 
-	{ LONGLONG _t = TdlPNow(); m_cbAllocToFilter.SetStrings(tld.aAllocTo); TdlPLog("        FB:cbAllocTo", _t); }
+	{  m_cbAllocToFilter.SetStrings(tld.aAllocTo);  }
 	m_cbAllocToFilter.AddEmptyString(); // add blank item to top
 	
 	// alloc by filter
-	{ LONGLONG _t = TdlPNow(); m_cbAllocByFilter.SetStrings(tld.aAllocBy); TdlPLog("        FB:cbAllocBy", _t); }
+	{  m_cbAllocByFilter.SetStrings(tld.aAllocBy);  }
 	m_cbAllocByFilter.AddEmptyString(); // add blank item to top
 	
 	// category filter
-	{ LONGLONG _t = TdlPNow(); m_cbCategoryFilter.SetStrings(tld.aCategory); TdlPLog("        FB:cbCategory", _t); }
+	{  m_cbCategoryFilter.SetStrings(tld.aCategory);  }
 	m_cbCategoryFilter.AddEmptyString(); // add blank item to top
 	
 	// status filter
-	{ LONGLONG _t = TdlPNow(); m_cbStatusFilter.SetStrings(tld.aStatus); TdlPLog("        FB:cbStatus", _t); }
+	{  m_cbStatusFilter.SetStrings(tld.aStatus);  }
 	m_cbStatusFilter.AddEmptyString(); // add blank item to top
 	
 	// version filter
-	{ LONGLONG _t = TdlPNow(); m_cbVersionFilter.SetStrings(tld.aVersion); TdlPLog("        FB:cbVersion", _t); }
+	{  m_cbVersionFilter.SetStrings(tld.aVersion);  }
 	m_cbVersionFilter.AddEmptyString(); // add blank item to top
 	
 	// tag filter
-	{ LONGLONG _t = TdlPNow(); m_cbTagFilter.SetStrings(tld.aTags); TdlPLog("        FB:cbTag", _t); }
+	{  m_cbTagFilter.SetStrings(tld.aTags);  }
 	m_cbTagFilter.AddEmptyString(); // add blank item to top
 	
 	// priority

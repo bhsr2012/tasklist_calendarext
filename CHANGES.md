@@ -326,3 +326,23 @@ Updated to current working-tree content (8):
 These changes cover the calendar/gantt layout fix, the task-edit/filter-bar
 collapse, the list-view removal, the tray-icon lifecycle rewrite, the window
 instance lookup by class name, the About dialog, and the associated resource IDs.
+
+## 2026-11-26 (later): instrumentation removed, CalendarExt built for speed
+
+All profiling probes (timing logs gated by an environment variable) have been
+removed from the modified sources, so the shipped binaries contain no
+instrumentation code or log paths. Behaviour of the affected functions is
+unchanged; only the timing wrappers were dropped.
+
+Updated to current working-tree content (15):
+`CalendarExt/CalendarExt.vcxproj`, `CalendarExt/CalendarWnd.cpp`,
+`CalendarExt/TaskCalendarCtrl.cpp`, `GanttChartExt/GanttChartWnd.cpp` (new),
+`GanttChartExt/GanttChartWnd.h` (new), `GanttChartExt/GanttTreeListCtrl.cpp`,
+`ToDoList/TDCTaskCtrlBase.cpp`, `ToDoList/TDCTaskListCtrl.cpp`,
+`ToDoList/TDCTaskTreeCtrl.cpp`, `ToDoList/TDCViewTabControl.cpp`,
+`ToDoList/TDLFilterBar.cpp`, `ToDoList/TabbedToDoCtrl.cpp`,
+`ToDoList/ToDoCtrl.cpp`, `ToDoList/ToDoList.cpp`, `ToDoList/ToDoListWnd.cpp`
+
+Also: `CalendarExt` Release builds now use /O2 (MaxSpeed) like the other
+projects, and the Gantt view caches its applied tree font so a preferences
+update on a populated tree no longer re-creates and re-applies the font.

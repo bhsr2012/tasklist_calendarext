@@ -40,86 +40,6 @@
 #pragma comment(lib, "shlwapi.lib")
 
 //////////////////////////////////////////////////////////////////////////
-// TEMP DIAGNOSTIC: large-allocation probe (enabled by env TDLHEAPPROBE)
-//////////////////////////////////////////////////////////////////////////
-#ifdef _DEBUG
-#include <dbghelp.h>
-#include <crtdbg.h>
-#pragma comment(lib, "dbghelp.lib")
-
-static HANDLE g_hTdlProbe = INVALID_HANDLE_VALUE;
-static LONG   g_nTdlProbeBusy = 0;
-
-static int __cdecl TdlProbeAllocHook(int nAllocType, void* pvData, size_t nSize, int nBlockUse,
-                                     long lRequest, const unsigned char* szFileName, int nLine)
-{
-	if (nAllocType != _HOOK_ALLOC || nSize < (4u << 20))
-		return TRUE;
-
-	if (g_hTdlProbe == INVALID_HANDLE_VALUE)
-		return TRUE;
-
-	if (InterlockedIncrement(&g_nTdlProbeBusy) != 1)
-	{
-		InterlockedDecrement(&g_nTdlProbeBusy);
-		return TRUE;
-	}
-
-	char buf[4096];
-	int len = _snprintf_s(buf, sizeof(buf), _TRUNCATE, "ALLOC %Iu bytes (req %ld)\r\n", nSize, lRequest);
-
-	void* frames[24];
-	USHORT nFrames = RtlCaptureStackBackTrace(1, 24, frames, NULL);
-
-	for (USHORT i = 0; i < nFrames; i++)
-	{
-		DWORD64 addr = (DWORD64)(ULONG_PTR)frames[i];
-		char symbuf[sizeof(SYMBOL_INFO) + 512];
-		SYMBOL_INFO* si = (SYMBOL_INFO*)symbuf;
-		si->SizeOfStruct = sizeof(SYMBOL_INFO);
-		si->MaxNameLen = 511;
-
-		DWORD64 disp = 0;
-		int used = 0;
-
-		if (SymFromAddr(GetCurrentProcess(), addr, &disp, si))
-			used = _snprintf_s(buf + len, sizeof(buf) - len, _TRUNCATE, "  %s + 0x%I64X\r\n", si->Name, disp);
-		else
-			used = _snprintf_s(buf + len, sizeof(buf) - len, _TRUNCATE, "  0x%08I64X\r\n", addr);
-
-		if (used <= 0)
-			break;
-
-		len += used;
-		if (len > (int)sizeof(buf) - 128)
-			break;
-	}
-
-	DWORD written = 0;
-	WriteFile(g_hTdlProbe, buf, (DWORD)len, &written, NULL);
-	InterlockedDecrement(&g_nTdlProbeBusy);
-
-	return TRUE;
-}
-
-static void TdlProbeStart()
-{
-	char szFlag[8] = { 0 };
-	if (!GetEnvironmentVariableA("TDLHEAPPROBE", szFlag, sizeof(szFlag)) || !szFlag[0])
-		return;
-
-	g_hTdlProbe = CreateFileA("D:\\tmp\\tdl_probe.log", GENERIC_WRITE, FILE_SHARE_READ,
-							  NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (g_hTdlProbe == INVALID_HANDLE_VALUE)
-		return;
-
-	SymSetOptions(SYMOPT_UNDNAME | SYMOPT_DEFERRED_LOADS | SYMOPT_LOAD_LINES);
-	SymInitialize(GetCurrentProcess(), NULL, TRUE);
-
-	_CrtSetAllocHook(TdlProbeAllocHook);
-}
-#endif
-//////////////////////////////////////////////////////////////////////////
 
 
 #ifdef _DEBUG
@@ -204,10 +124,6 @@ static HANDLE m_hMutex = NULL;
 static HWND FindInstanceFrame();
 BOOL CToDoListApp::InitInstance()
 {
-#ifdef _DEBUG
-	TdlProbeStart();
-#endif
-
 	CEnCommandLineInfo cmdInfo(_T(".tdl;.xml"));
 	ParseCommandLine(cmdInfo);
 

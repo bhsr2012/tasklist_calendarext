@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include "calprof.h"
 #include "TaskCalendarCtrl.h"
 
 #include "..\ToDoList\tdcenum.h"
@@ -643,15 +642,14 @@ BOOL CTaskCalendarCtrl::WantAttributeUpdate(int nEditAttrib)
 
 void CTaskCalendarCtrl::UpdateTasks(const ITaskList* pTasks, IUI_UPDATETYPE nUpdate, int nEditAttribute)
 {
-	LONGLONG _tCalUT = CalPNow();
 	const ITaskList14* pTasks14 = GetITLInterface<ITaskList14>(pTasks, IID_TASKLIST14);
 	BOOL bChange = FALSE;
 
 	switch (nUpdate)
 	{
 	case IUI_ALL:
-		{ LONGLONG _t = CalPNow(); DeleteData(); CalPLog("  CAL:DeleteData", _t); }
-		{ LONGLONG _t = CalPNow(); BuildData(pTasks14, pTasks->GetFirstTask(), TRUE); CalPLog("  CAL:BuildData", _t); }
+		{  DeleteData();  }
+		{  BuildData(pTasks14, pTasks->GetFirstTask(), TRUE);  }
 		bChange = TRUE;
 		break;
 		
@@ -677,7 +675,6 @@ void CTaskCalendarCtrl::UpdateTasks(const ITaskList* pTasks, IUI_UPDATETYPE nUpd
 		m_bCellsCacheValid = FALSE;
 		Invalidate(FALSE);
 	}
-	CalPLog("CAL:UpdateTasks", _tCalUT);
 }
 
 BOOL CTaskCalendarCtrl::RemoveDeletedTasks(const ITaskList14* pTasks)
@@ -1031,7 +1028,6 @@ void CTaskCalendarCtrl::DrawGrid(CDC* pDC)
 
 void CTaskCalendarCtrl::DrawCells(CDC* pDC)
 {
-	LONGLONG _tCalDC = CalPNow();
 	// rebuild build display
 	// NOTE: m_nMaxDayTaskCount/m_mapVertPos are filled by GetCellTasks().
 	// They must survive a cache hit, otherwise no task can be positioned.
@@ -1123,8 +1119,7 @@ void CTaskCalendarCtrl::DrawCells(CDC* pDC)
 	// single scrollbar per row, refreshed once per frame (never per cell)
 	UpdateRowScrollBars();
 
-	{ LONGLONG _t = CalPNow(); CCalendarCtrl::DrawCells(pDC); CalPLog("  CAL:DrawCells.base", _t); }
-	CalPLog("CAL:DrawCells", _tCalDC);
+	{  CCalendarCtrl::DrawCells(pDC);  }
 }
 
 bool CTaskCalendarCtrl::DrawCell(CDC* pDC, const CCalendarCell* pCell, const CRect& rCell, 
@@ -2006,17 +2001,14 @@ bool CTaskCalendarCtrl::GetGridCellFromTask(DWORD dwTaskID, int &nRow, int &nCol
 {
 	DWORD dwCell = 0;
 
-	LONGLONG _tGCT = CalPNow();
 
 	if (m_bCellsCacheValid && m_mapTaskCell.Lookup(dwTaskID, dwCell))
 	{
 		nCol = LOWORD(dwCell);
 		nRow = HIWORD(dwCell);
-		CalPLog("  CAL:GridCell.fast", _tGCT);
 		return true;
 	}
 
-	CalPLog("  CAL:GridCell.slow", _tGCT);
 
 	// iterate the visible cells for the specified task
 	CTaskCalItemArray aTasks;
@@ -2213,19 +2205,17 @@ BOOL CTaskCalendarCtrl::SelectTask(DWORD dwTaskID, BOOL bNotify)
 
 		m_dwSelectedTaskID = dwTaskID;
 
-		LONGLONG _tSel = CalPNow();
 
 		if (bNotify)
-		{ LONGLONG _t = CalPNow(); GetParent()->SendMessage(WM_CALENDAR_SELCHANGE, 0, dwTaskID); CalPLog("    CAL:Sel.notify", _t); }
+		{  GetParent()->SendMessage(WM_CALENDAR_SELCHANGE, 0, dwTaskID);  }
 
 		int nTaskPos = GetTaskVertPos(dwTaskID, true, -1);
 
 		// repaint only the two bars whose appearance changed: a full
 		// Invalidate() costs a whole grid redraw on every click
-		{ LONGLONG _t = CalPNow(); InvalidateTaskRect(dwPrevSelected); InvalidateTaskRect(dwTaskID); CalPLog("    CAL:Sel.inval", _t); }
-		{ LONGLONG _t = CalPNow(); UpdateWindow(); CalPLog("    CAL:Sel.update", _t); }
+		{  InvalidateTaskRect(dwPrevSelected); InvalidateTaskRect(dwTaskID);  }
+		{  UpdateWindow();  }
 
-		CalPLog("  CAL:SelectTask", _tSel);
 	}
 
 	return TRUE;

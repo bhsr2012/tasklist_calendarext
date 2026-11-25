@@ -3,7 +3,6 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "tdlprof.h"
 #include "TDCTaskCtrlBase.h"
 #include "todoctrldata.h"
 #include "tdcstatic.h"
@@ -549,7 +548,7 @@ void CTDCTaskCtrlBase::OnUndoRedo(BOOL /*bUndo*/)
 void CTDCTaskCtrlBase::OnColumnVisibilityChange(BOOL bRecalcWidths)
 {
 	// everything depends on the visibility map being up to date
-	{ LONGLONG _t = TdlPNow(); RebuildColumnVisibilityMap(); TdlPLog("        CV:VisMap", _t); }
+	{  RebuildColumnVisibilityMap();  }
 
 	CHoldRedraw hr(m_lcColumns);
 	
@@ -562,9 +561,9 @@ void CTDCTaskCtrlBase::OnColumnVisibilityChange(BOOL bRecalcWidths)
 		m_hdrColumns.ShowItem(nItem, IsColumnShowing(nColID));
 	}
 
-	{ LONGLONG _t = TdlPNow(); OnImageListChange(); TdlPLog("        CV:ImgList", _t); }
+	{  OnImageListChange();  }
 	if (bRecalcWidths)
-	{ LONGLONG _t = TdlPNow(); RecalcColumnWidths(FALSE); TdlPLog("        CV:RecalcW", _t); }
+	{  RecalcColumnWidths(FALSE);  }
 }
 
 void CTDCTaskCtrlBase::OnImageListChange()
@@ -812,14 +811,11 @@ void CTDCTaskCtrlBase::RecalcColumnWidths()
 
 void CTDCTaskCtrlBase::RecalcColumnWidths(BOOL bCustom)
 {
-	LONGLONG _tRC = TdlPNow();
 	CHoldRedraw hr(m_lcColumns);
 
-	LONGLONG _tDC = TdlPNow();
 	// recalc the widths of 'non-tracked' items
 	CDC* pDC = m_lcColumns.GetDC();
 	CFont* pOldFont = GraphicsMisc::PrepareDCFont(pDC, m_lcColumns);
-	TdlPLog("      RCW:GetDC", _tDC);
 
 	int nNumCols = m_hdrColumns.GetItemCount();
 	
@@ -885,9 +881,7 @@ void CTDCTaskCtrlBase::RecalcColumnWidths(BOOL bCustom)
 
 	if (m_batchLongest.aAttribs.GetSize())
 	{
-		LONGLONG _tGLV = TdlPNow();
 		m_find.GetLongestValues(m_batchLongest);
-		TdlPLog("        CV:GLVbatch", _tGLV);
 		m_bBatchValid = TRUE;
 	}
 
@@ -918,7 +912,6 @@ for (int nItem = 1; nItem < nNumCols; nItem++)
 	m_lcColumns.ReleaseDC(pDC);
 	m_bBatchValid = FALSE;
 
-	TdlPLogI("        CV:RecalcW1", _tRC, bCustom ? 1 : 0);
 }
 
 void CTDCTaskCtrlBase::RecalcColumnWidth(TDC_COLUMN nColID)
@@ -986,25 +979,25 @@ void CTDCTaskCtrlBase::LoadState(const CPreferences& prefs, const CString& sKey)
 	BOOL bHaveSavedWidths = prefs.GetProfileArray((sKey + _T("\\ColumnWidth")), aWidthsProbe) && aWidthsProbe.GetSize();
 	
 	// make sure columns are configured right
-	{ LONGLONG _t = TdlPNow(); OnColumnVisibilityChange(!bHaveSavedWidths); TdlPLog("    LS:OnColVis", _t); }
+	{  OnColumnVisibilityChange(!bHaveSavedWidths);  }
 	
 	if (prefs.GetProfileArray((sKey + _T("\\ColumnOrder")), aOrder))
-		{ LONGLONG _t = TdlPNow(); SetColumnOrder(aOrder); TdlPLog("    LS:ColOrder", _t); }
+		{  SetColumnOrder(aOrder);  }
 
 	if (aWidthsProbe.GetSize())
-		{ LONGLONG _t = TdlPNow(); aWidths.Copy(aWidthsProbe); SetColumnWidths(aWidths); TdlPLog("    LS:ColWidth", _t); }
+		{  aWidths.Copy(aWidthsProbe); SetColumnWidths(aWidths);  }
 	
 	if (prefs.GetProfileArray((sKey + _T("\\ColumnTracked")), aTracked))
-		{ LONGLONG _t = TdlPNow(); SetTrackedColumns(aTracked); TdlPLog("    LS:ColTrack", _t); }
+		{  SetTrackedColumns(aTracked);  }
 	
 	if (aOrder.GetSize() || aWidths.GetSize() || aTracked.GetSize())
-		{ LONGLONG _t = TdlPNow(); SetSplitPos(prefs.GetProfileInt(sKey, _T("SplitPos"), 300)); TdlPLog("    LS:SplitPos(saved)", _t); }
+		{  SetSplitPos(prefs.GetProfileInt(sKey, _T("SplitPos"), 300));  }
 	else
-		{ LONGLONG _t = TdlPNow(); int _sp = CalcSplitterPosToFitColumns(); TdlPLog("    LS:SplitPos(fit)", _t); SetSplitPos(_sp); }
+		{  int _sp = CalcSplitterPosToFitColumns();  SetSplitPos(_sp); }
 
-	{ LONGLONG _t = TdlPNow(); RefreshSize(); TdlPLog("    LS:RefreshSize", _t); }
+	{  RefreshSize();  }
 
-	{ LONGLONG _t = TdlPNow(); LoadSortState(prefs, sKey); TdlPLog("    LS:SortState", _t); }
+	{  LoadSortState(prefs, sKey);  }
 }
 
 void CTDCTaskCtrlBase::SaveSortState(CPreferences& prefs, const CString& sKey) const
@@ -4427,11 +4420,9 @@ int CTDCTaskCtrlBase::RecalcColumnWidth(int nCol, CDC* pDC, BOOL bVisibleOnly) c
 
 			if (!LookupLongestValue(nAttrib, sLongest))
 			{
-				LONGLONG _t = TdlPNow();
 				sLongest = m_find.GetLongestValue(nAttrib, bVisibleOnly);
-				TdlPLogI("      GLV:attr", _t, (int)nAttrib);
 			}
-			{ LONGLONG _t = TdlPNow(); nColWidth = GraphicsMisc::GetAverageMaxStringWidth(sLongest, pDC); TdlPLogI("      GLV:width", _t, (int)nAttrib); }
+			{  nColWidth = GraphicsMisc::GetAverageMaxStringWidth(sLongest, pDC);  }
 		}
 		break;
 		
@@ -4940,21 +4931,13 @@ CString CTDCTaskCtrlBase::GetSelectedTaskTitle() const
 int CTDCTaskCtrlBase::GetSelectedTaskPriority() const
 {
    int nPriority = -1;
-   __int64 _tp = TdlPNow();
    int _nCntP = GetSelectedCount();
-   TdlPLogI("          P.cnt", _tp, _nCntP);
-   _tp = TdlPNow();
    POSITION pos = GetFirstSelectedTaskPos();
-   TdlPLog("          P.fsp", _tp);
 
    while (pos)
    {
-      _tp = TdlPNow();
       DWORD dwTaskID = GetNextSelectedTaskID(pos);
-      TdlPLogI("          P.next", _tp, (int)dwTaskID);
-      _tp = TdlPNow();
       int nTaskPriority = m_data.GetTaskPriority(dwTaskID);
-      TdlPLog("          P.get", _tp);
 
       if (nPriority == -1)
          nPriority = nTaskPriority;
@@ -5328,29 +5311,19 @@ CString CTDCTaskCtrlBase::GetSelectedTaskEquipment() const
 {
 	CString sEquipment;
 
-	__int64 _te = TdlPNow();
 	int _nCntE = GetSelectedCount();
-	TdlPLogI("          E.cnt", _te, _nCntE);
 
 	if (GetSelectedCount())
 	{
 		// get first item's value as initial
-		_te = TdlPNow();
 		POSITION pos = GetFirstSelectedTaskPos();
-		TdlPLog("          E.fsp", _te);
-		_te = TdlPNow();
 		DWORD dwTaskID = GetNextSelectedTaskID(pos);
-		TdlPLogI("          E.next", _te, (int)dwTaskID);
 
-		_te = TdlPNow();
 		sEquipment = m_data.GetTaskEquipment(dwTaskID);
-		TdlPLog("          E.get", _te);
 
 		while (pos)
 		{
-			_te = TdlPNow();
 			dwTaskID = GetNextSelectedTaskID(pos);
-			TdlPLogI("          E.next2", _te, (int)dwTaskID);
 			CString sTaskEquipment = m_data.GetTaskEquipment(dwTaskID);
 
 			if (sEquipment != sTaskEquipment)

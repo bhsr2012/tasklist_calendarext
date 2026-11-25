@@ -3,7 +3,6 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "tdlprof.h"
 #include "todolist.h"
 #include "TDCTaskTreeCtrl.h"
 #include "todoctrldata.h"
@@ -345,7 +344,7 @@ void CTDCTaskTreeCtrl::SetExpandedTasks(const CDWordArray& aExpanded)
 
 BOOL CTDCTaskTreeCtrl::EnsureSelectionVisible()
 {
-	BOOL _bSelCount; { LONGLONG _t = TdlPNow(); _bSelCount = GetSelectedCount(); TdlPLog("          ESV:GetSelCount", _t); }
+	BOOL _bSelCount; {  _bSelCount = GetSelectedCount();  }
 
 	if (_bSelCount)
 	{
@@ -364,14 +363,12 @@ BOOL CTDCTaskTreeCtrl::EnsureSelectionVisible()
 				return TRUE;
 			}
 
-			LONGLONG _tScope = TdlPNow();
 			{
 				CHoldRedraw hr(*this);
 				CHoldHScroll hhs(m_tcTasks, 0);
 		
 				TCH().EnsureVisibleEx(GetTreeSelectedItem(), FALSE);
 			}
-			TdlPLog("          ESV:EnsureVisScope", _tScope);
 		}
 
 		return TRUE;
