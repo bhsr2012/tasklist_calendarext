@@ -1,0 +1,297 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Unicode Debug|Win32">
+      <Configuration>Unicode Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+<ProjectConfiguration Include="Unicode Debug|x64">
+      <Configuration>Unicode Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Unicode Release|Win32">
+      <Configuration>Unicode Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+<ProjectConfiguration Include="Unicode Release|x64">
+      <Configuration>Unicode Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <SccProjectName />
+    <SccLocalPath />
+    <Keyword>MFCProj</Keyword>
+    <ProjectGuid>{4300A60A-FC22-6479-E04B-4D0EC4CADE39}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'" Label="Configuration">
+    <PlatformToolset>v143</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|x64'" Label="Configuration">
+    <PlatformToolset>v143</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'" Label="Configuration">
+    <PlatformToolset>v143</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|x64'" Label="Configuration">
+    <PlatformToolset>v143</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'">
+    <OutDir>.\Unicode_Release\</OutDir>
+    <IntDir>.\Unicode_Release\</IntDir>
+  </PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|x64'">
+    <OutDir>.\Unicode_Release_x64\</OutDir>
+    <IntDir>.\Unicode_Release_x64\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">
+    <OutDir>.\Unicode_Debug\</OutDir>
+    <IntDir>.\Unicode_Debug\</IntDir>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+  </PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|x64'">
+    <OutDir>.\Unicode_Debug_x64\</OutDir>
+    <IntDir>.\Unicode_Debug_x64\</IntDir>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MaxSpeed</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;UNICODE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Unicode_Release\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\Unicode_Release\3rdParty.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\Unicode_Release\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Unicode_Release\</ProgramDataBaseFileName>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <ResourceCompile>
+      <Culture>0x0c09</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Unicode_Release\3rdParty.bsc</OutputFile>
+    </Bscmake>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>..\Lib\3rdParty.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|x64'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MaxSpeed</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;UNICODE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Unicode_Release_x64\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\Unicode_Release_x64\3rdParty.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\Unicode_Release_x64\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Unicode_Release_x64\</ProgramDataBaseFileName>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <ResourceCompile>
+      <Culture>0x0c09</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Unicode_Release_x64\3rdParty.bsc</OutputFile>
+    </Bscmake>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>..\Lib_x64\3rdParty.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <MinimalRebuild>true</MinimalRebuild>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;UNICODE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Unicode_Debug\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\Unicode_Debug\3rdParty.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\Unicode_Debug\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Unicode_Debug\</ProgramDataBaseFileName>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <ResourceCompile>
+      <Culture>0x0c09</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Unicode_Debug\3rdParty.bsc</OutputFile>
+    </Bscmake>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>..\Libd\3rdParty.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|x64'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <MinimalRebuild>true</MinimalRebuild>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;UNICODE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Unicode_Debug_x64\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\Unicode_Debug_x64\3rdParty.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\Unicode_Debug_x64\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Unicode_Debug_x64\</ProgramDataBaseFileName>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <ResourceCompile>
+      <Culture>0x0c09</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Unicode_Debug_x64\3rdParty.bsc</OutputFile>
+    </Bscmake>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>..\Lib_x64d\3rdParty.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Base64Coder.cpp" />
+    <ClCompile Include="CalendarCtrl.cpp" />
+    <ClCompile Include="ClipboardBackup.cpp" />
+    <ClCompile Include="ColourPicker.cpp" />
+    <ClCompile Include="ColourPopup.cpp" />
+    <ClCompile Include="Compression.cpp" />
+    <ClCompile Include="DragDrop.cpp" />
+    <ClCompile Include="FileVersionInfo.cpp" />
+    <ClCompile Include="FontComboBox.cpp" />
+    <ClCompile Include="FPSMiniCalendarCtrl.cpp" />
+    <ClCompile Include="FPSMiniCalendarListCtrl.cpp" />
+    <ClCompile Include="ggets.cpp" />
+    <ClCompile Include="GUI.CPP" />
+    <ClCompile Include="HMXChart.cpp" />
+    <ClCompile Include="HMXDataset.cpp" />
+    <ClCompile Include="Ini.cpp" />
+    <ClCompile Include="LockableHeaderCtrl.cpp" />
+    <ClCompile Include="MemUtil.cpp" />
+    <ClCompile Include="msoutl.cpp" />
+    <ClCompile Include="msword.cpp" />
+    <ClCompile Include="NewRandom.cpp" />
+    <ClCompile Include="ProgressCtrlWithTimer.cpp" />
+    <ClCompile Include="ProgressThread.cpp" />
+    <ClCompile Include="RegUtil.cpp" />
+    <ClCompile Include="rijndael.cpp" />
+    <ClCompile Include="sha2.cpp" />
+    <ClCompile Include="ShellIcons.cpp" />
+    <ClCompile Include="SizeComboBox.cpp" />
+    <ClCompile Include="StatLink.cpp" />
+    <ClCompile Include="StatusBarACT.cpp" />
+    <ClCompile Include="StdAfx.cpp" />
+    <ClCompile Include="StdioFileEx.cpp" />
+    <ClCompile Include="XHTMLStatic.cpp" />
+    <ClCompile Include="XmlNodeWrapper.cpp" />
+    <ClCompile Include="XNamedColors.cpp" />
+    <ClCompile Include="XPTabCtrl.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Base64Coder.h" />
+    <ClInclude Include="CalendarCtrl.h" />
+    <ClInclude Include="ClipboardBackup.h" />
+    <ClInclude Include="ColourPicker.h" />
+    <ClInclude Include="ColourPopup.h" />
+    <ClInclude Include="Compression.h" />
+    <ClInclude Include="DragDrop.h" />
+    <ClInclude Include="FileVersionInfo.h" />
+    <ClInclude Include="FontComboBox.h" />
+    <ClInclude Include="FPSMiniCalendarCtrl.h" />
+    <ClInclude Include="FPSMiniCalendarListCtrl.h" />
+    <ClInclude Include="ggets.h" />
+    <ClInclude Include="GUI.H" />
+    <ClInclude Include="HMXChart.h" />
+    <ClInclude Include="HMXDataset.h" />
+    <ClInclude Include="Html2Rtf.h" />
+    <ClInclude Include="Ini.h" />
+    <ClInclude Include="Zlib\IOAPI.H" />
+    <ClInclude Include="Zlib\IOWIN32.H" />
+    <ClInclude Include="LockableHeaderCtrl.h" />
+    <ClInclude Include="MemDC.h" />
+    <ClInclude Include="MemUtil.h" />
+    <ClInclude Include="msoutl.h" />
+    <ClInclude Include="msword.h" />
+    <ClInclude Include="NewRandom.h" />
+    <ClInclude Include="ProgressCtrlWithTimer.h" />
+    <ClInclude Include="ProgressThread.h" />
+    <ClInclude Include="RegUtil.h" />
+    <ClInclude Include="rijndael.h" />
+    <ClInclude Include="Schemadef.h" />
+    <ClInclude Include="SendFileTo.h" />
+    <ClInclude Include="sha2.h" />
+    <ClInclude Include="ShellIcons.h" />
+    <ClInclude Include="SizeComboBox.h" />
+    <ClInclude Include="StatLink.h" />
+    <ClInclude Include="StatusBarACT.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="StdioFileEx.h" />
+    <ClInclude Include="TemplateSmartPtr.h" />
+    <ClInclude Include="Tmschema.h" />
+    <ClInclude Include="TOM.h" />
+    <ClInclude Include="Zlib\UNZIP.H" />
+    <ClInclude Include="Uxtheme.h" />
+    <ClInclude Include="XHTMLStatic.h" />
+    <ClInclude Include="XmlNodeWrapper.h" />
+    <ClInclude Include="XNamedColors.h" />
+    <ClInclude Include="XPTabCtrl.h" />
+    <ClInclude Include="Zlib\ZCONF.H" />
+    <ClInclude Include="Zlib\ZIP.H" />
+    <ClInclude Include="Zlib\ZLIB.H" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
