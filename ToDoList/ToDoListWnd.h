@@ -147,6 +147,7 @@ protected:
 	BOOL m_bPasswordPrompting;
 	BOOL m_bReloading; // on startup
 	BOOL m_bStartHidden;
+	BOOL m_bStartupLoading;
 	BOOL m_bLogging;
 	BOOL m_bSaveUIVisInTaskList;
 
@@ -650,6 +651,7 @@ protected:
 	
 	void ShowAllWindowHide();
 	void ShowAllWindow();
+	void DrawStartupLoadPrompt(CDC& dc);
 
 	void UpdateTooltip();
 	void UpdateCaption(CString * pStrCaption = NULL);

@@ -310,6 +310,7 @@ CToDoListWnd::CToDoListWnd() : CFrameWnd(),
 		m_hIcon(NULL),
 		m_hwndLastFocus(NULL),
 		m_bStartHidden(FALSE),
+		m_bStartupLoading(FALSE),
 		m_cbQuickFind(ACBS_ALLOWDELETE | ACBS_ADDTOSTART),
 		m_bShowTasklistBar(TRUE), 
 		m_bShowTreeListBar(TRUE),
@@ -2358,6 +2359,9 @@ LRESULT CToDoListWnd::OnPostOnCreate(WPARAM /*wp*/, LPARAM /*lp*/)
 	// initialize Progress first time
 	m_sbProgress.BeginProgress(m_statusBar, CEnString(IDS_STARTUPPROGRESS));
 
+	// 启动加载期间视图会被隐藏，客户区必须有明确提示
+	m_bStartupLoading = TRUE;
+
 	// open cmdline tasklist
 	int nTDCCount = prefs.GetProfileInt(_T("Settings"), _T("NumLastFiles"), 0);
 
@@ -2503,6 +2507,8 @@ LRESULT CToDoListWnd::OnPostOnCreate(WPARAM /*wp*/, LPARAM /*lp*/)
 	
 	// theme
 	SetUITheme(userPrefs.GetUITheme());
+
+	m_bStartupLoading = FALSE;
 
 	RefreshTabOrder();
 	Invalidate(TRUE);
@@ -2875,6 +2881,11 @@ BOOL CToDoListWnd::OnEraseBkgnd(CDC* pDC)
 		GraphicsMisc::DrawHorzLine(pDC, 0, rClient.Width(), nVPos, m_theme.crAppLinesDark);
 		GraphicsMisc::DrawHorzLine(pDC, 0, rClient.Width(), (nVPos + 1), m_theme.crAppLinesLight);
 	}
+
+	// 启动加载期间视图全部隐藏，这里给出明确提示，
+	// 避免用户对着空白或残留画面等待
+	if (m_bStartupLoading)
+		DrawStartupLoadPrompt(*pDC);
 
 	// this is definitely amongst the worst hacks I've ever had to implement.
 	// It occurs because the CSysImageList class seems to not initialize 
@@ -5510,10 +5521,15 @@ void CToDoListWnd::SetCalendarView()
 {
 	CFilteredToDoCtrl& tdc = GetToDoCtrl();
  
+	// 启动加载是同步的，此时若把日历视图显示出来，半成品画面会一直
+	// 冻结在屏幕上直到加载结束，所以加载期间只切换视图不显示
+	BOOL bShowView = !m_bStartupLoading;
+
 	{  tdc.ShowWindow(SW_HIDE);  }
 	//李波 这里很慢
 	{  tdc.SetView(FTCV_FIRSTUIEXTENSION);  }
  
+	if (bShowView)
 	{  tdc.ShowWindow(SW_SHOW);  }
 	//IUIExtensionWindow * pCalendarExtensionWindow = tdc.GetCalendar();
 	//CCalendarWnd * pCalendarWnd = (CCalendarWnd *)pCalendarExtensionWindow;
@@ -8383,6 +8399,45 @@ void CToDoListWnd::ShowAllWindowHide()
 		CFilteredToDoCtrl& tdc = GetToDoCtrl(i);
 		tdc.ShowWindow(SW_HIDE);
 	}
+
+	// 视图隐藏后其区域不会自动重绘，若不立即擦除，加载全过程会一直冻结着
+	// 切换前那张半成品画面
+	if (IsWindowVisible())
+	{
+		Invalidate(TRUE);
+		UpdateWindow();
+
+		// 后续不再有重绘时机，提示文字必须当场画出
+		if (m_bStartupLoading)
+		{
+			CClientDC dc(this);
+			DrawStartupLoadPrompt(dc);
+		}
+	}
+}
+
+void CToDoListWnd::DrawStartupLoadPrompt(CDC& dc)
+{
+	CRect rText;
+	GetClientRect(rText);
+
+	if (m_bShowFilterBar)
+		rText.top = CDialogHelper::GetChildRect(&m_filterBar).bottom + 1;
+
+	if (m_bShowStatusBar)
+		rText.bottom = CDialogHelper::GetChildRect(&m_statusBar).top - 1;
+
+	CFont* pOldFont = NULL;
+
+	if (m_fontMain.GetSafeHandle())
+		pOldFont = dc.SelectObject(&m_fontMain);
+
+	dc.SetBkMode(TRANSPARENT);
+	dc.SetTextColor(m_theme.crAppText);
+	dc.DrawText(CEnString(IDS_STARTUPPROGRESS), rText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+	if (pOldFont)
+		dc.SelectObject(pOldFont);
 }
 
 void CToDoListWnd::ShowAllWindow()

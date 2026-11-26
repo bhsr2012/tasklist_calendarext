@@ -848,7 +848,15 @@ void CGanttTreeListCtrl::RebuildTree(const ITaskList14* pTasks)
 		}
 	}
 
+	// Freeze repaint while the tree is being filled: each InsertItem
+	// invalidates the control, which makes comctl32 run a paint pass
+	// (and therefore a TVN_GETDISPINFO per visible node) for every
+	// single insertion. With 10k+ tasks that dominates the first
+	// switch to the gantt view.
+	pTree->SetRedraw(FALSE);
 	BuildTreeItem(pTasks, pTasks->GetFirstTask(), *pTree, NULL, TRUE);
+	pTree->SetRedraw(TRUE);
+	pTree->Invalidate(FALSE);
 
 	// restore previous date range if no data
 	if (m_data.GetCount() == 0)

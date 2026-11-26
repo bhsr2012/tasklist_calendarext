@@ -685,6 +685,19 @@ static LPVOID TrayAllocRemote(HANDLE hp, SIZE_T cb)
 		if (p != NULL)
 			return p;
 	}
+
+	// 固定地址可能全被 explorer 自己占用（实测 0x10000000 已占用），
+	// 此时让系统自选地址，只要仍落在低 4GB 就能用 32 位 LPARAM 传进去
+	LPVOID pAny = ::VirtualAllocEx(hp, NULL, cb, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+	if (pAny != NULL)
+	{
+		if (((ULONG_PTR)pAny >> 32) == 0)
+			return pAny;
+
+		::VirtualFreeEx(hp, pAny, 0, MEM_RELEASE);
+	}
+
 	return NULL;
 #endif
 }
@@ -736,6 +749,10 @@ int TrayPurgeByModule(LPCTSTR pszExeName, HWND hKeepSelf)
 		return 0;
 
 	int nDeleted = 0;
+
+	struct TRAY_SLOT { HWND hWnd; UINT uID; };
+	TRAY_SLOT aFound[128];
+	int nFound = 0;
 
 	HWND hTray = ::FindWindow(_T("Shell_TrayWnd"), NULL);
 	if (hTray == NULL)
@@ -834,8 +851,13 @@ int TrayPurgeByModule(LPCTSTR pszExeName, HWND hKeepSelf)
 						if (hOwner == NULL || hOwner == hKeepSelf)
 							continue;
 
-						if (TrayDeleteSlot(hOwner, uID))
-							nDeleted++;
+						// 先收集再删除：删除会让后续按钮下标前移，边遍历边删会漏掉一半
+						if (nFound < _countof(aFound))
+						{
+							aFound[nFound].hWnd = hOwner;
+							aFound[nFound].uID = uID;
+							nFound++;
+						}
 					}
 
 					::VirtualFreeEx(hp, pRemote, 0, MEM_RELEASE);
@@ -845,6 +867,12 @@ int TrayPurgeByModule(LPCTSTR pszExeName, HWND hKeepSelf)
 		}
 
 		hTb = ::FindWindowEx(hPager, hTb, _T("ToolbarWindow32"), NULL);
+	}
+
+	for (int i = 0; i < nFound; i++)
+	{
+		if (TrayDeleteSlot(aFound[i].hWnd, aFound[i].uID))
+			nDeleted++;
 	}
 
 	return nDeleted;
