@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include "..\todolist\tdlprof.h"
 #include "resource.h"
 #include "StatisticsExt.h"
 #include "StatisticsWnd.h"
@@ -254,13 +253,13 @@ void CStatisticsWnd::BuildData(const ITaskList12* pTasks)
 		CDateHelper::ClearDate(m_dtLatestDone);
 
 		// get the info we're interested in
-		{ LONGLONG _t = TdlPNow(); BuildData(pTasks, pTasks->GetFirstTask(), TRUE); TdlPLog("    ST:walk", _t); }
+		BuildData(pTasks, pTasks->GetFirstTask(), TRUE);
 
 		// sort by start date
-		{ LONGLONG _t = TdlPNow(); SortData(); TdlPLog("    ST:sort", _t); }
+		SortData();
 
 		// rebuild graph
-		{ LONGLONG _t = TdlPNow(); BuildGraph(); TdlPLog("    ST:graph", _t); }
+		BuildGraph();
 	}
 	else
 	{
@@ -325,8 +324,6 @@ void CStatisticsWnd::UpdateTasks(const ITaskList* pTasks, IUI_UPDATETYPE nUpdate
 	// we must have been initialized already
 	ASSERT(m_graph.GetSafeHwnd());
 
-	LONGLONG _tST = TdlPNow();
-
 	CHoldRedraw hr(m_graph);
 		
 	const ITaskList12* pTasks12 = GetITLInterface<ITaskList12>(pTasks, IID_TASKLIST12);
@@ -335,15 +332,15 @@ void CStatisticsWnd::UpdateTasks(const ITaskList* pTasks, IUI_UPDATETYPE nUpdate
 	{
 	case IUI_ALL:
 	case IUI_ADD:
-		{ LONGLONG _t = TdlPNow(); BuildData(pTasks12); TdlPLog("  ST:BuildData", _t); } // builds graph too
+		BuildData(pTasks12); // builds graph too
 		break;
 		
 	case IUI_EDIT:
-		{ LONGLONG _t = TdlPNow(); UpdateTask(pTasks12, pTasks12->GetFirstTask(), nUpdate, nEditAttribute, TRUE); TdlPLog("  ST:UpdTask", _t); }
-		{ LONGLONG _t = TdlPNow(); UpdateDataExtents(); TdlPLog("  ST:Extents", _t); }
+		UpdateTask(pTasks12, pTasks12->GetFirstTask(), nUpdate, nEditAttribute, TRUE);
+		UpdateDataExtents();
 
-		{ LONGLONG _t = TdlPNow(); SortData(); TdlPLog("  ST:Sort", _t); }
-		{ LONGLONG _t = TdlPNow(); BuildGraph(); TdlPLog("  ST:Graph", _t); }
+		SortData();
+		BuildGraph();
 		break;
 		
 	case IUI_DELETE:
@@ -360,8 +357,6 @@ void CStatisticsWnd::UpdateTasks(const ITaskList* pTasks, IUI_UPDATETYPE nUpdate
 	default:
 		ASSERT(0);
 	}
-
-	TdlPLog("  ST:UpdateTasks", _tST);
 }
 
 void CStatisticsWnd::UpdateDataExtents()

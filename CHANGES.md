@@ -346,3 +346,10 @@ Updated to current working-tree content (15):
 Also: `CalendarExt` Release builds now use /O2 (MaxSpeed) like the other
 projects, and the Gantt view caches its applied tree font so a preferences
 update on a populated tree no longer re-creates and re-applies the font.
+
+The three profiling-only headers (`ToDoList/tdlprof.h`,
+`GanttChartExt/ganttprof.h`, `CalendarExt/calprof.h`) have been removed, and
+`StatisticsExt/StatisticsWnd.cpp` has been restored to its uninstrumented
+content. No timing wrappers or profiling log paths remain in the tree.
+The historical patch under `patches/` still records the probes that were
+present when it was generated; the files in this tree are authoritative.
