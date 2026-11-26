@@ -58,6 +58,9 @@ const int DEF_MONTH_WIDTH		= 72;
 const int TREE_TITLE_MIN_WIDTH	= 75; 
 const int COLUMN_PADDING		= 15;
 const int MIN_MONTH_WIDTH		= 20;
+// 右侧时间轴的最小可视宽度：窗口窄时优先压缩左侧任务列表，
+// 否则甘特条与时间刻度会被挤成 0 宽而完全看不到
+const int MIN_TIMELINE_WIDTH	= 220;
 const int MINS_IN_HOUR			= 60;
 const int MINS_IN_DAY			= (MINS_IN_HOUR * 24);
 const int LV_COLPADDING			= 3;
@@ -1326,6 +1329,14 @@ void CGanttTreeListCtrl::Resize(const CRect& rect)
 		m_treeHeader.GetItemRect(nLastCol, rItem);
 
 		int nTreeWidth = (rItem.right + 4);
+
+		// 左侧树按内容自适应后可能占满整个控件宽度，此时右侧时间轴只剩
+		// 十几像素，甘特图整片空白。这里给右侧保留一个最小宽度，
+		// 宁可让左侧树出现横向滚动条。
+		int nMaxTreeWidth = (rect.Width() - MIN_TIMELINE_WIDTH);
+
+		if (nMaxTreeWidth > 0 && nTreeWidth > nMaxTreeWidth)
+			nTreeWidth = nMaxTreeWidth;
 
 		CTreeListSyncer::Resize(rect, nTreeWidth);
 	}
