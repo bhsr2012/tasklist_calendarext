@@ -311,6 +311,7 @@ CToDoListWnd::CToDoListWnd() : CFrameWnd(),
 		m_hwndLastFocus(NULL),
 		m_bStartHidden(FALSE),
 		m_bStartupLoading(FALSE),
+		m_bLongOpActive(FALSE),
 		m_cbQuickFind(ACBS_ALLOWDELETE | ACBS_ADDTOSTART),
 		m_bShowTasklistBar(TRUE), 
 		m_bShowTreeListBar(TRUE),
@@ -2886,6 +2887,8 @@ BOOL CToDoListWnd::OnEraseBkgnd(CDC* pDC)
 	// 避免用户对着空白或残留画面等待
 	if (m_bStartupLoading)
 		DrawStartupLoadPrompt(*pDC);
+	else if (m_bLongOpActive)
+		DrawStartupLoadPrompt(*pDC, m_sLongOpMsg);
 
 	// this is definitely amongst the worst hacks I've ever had to implement.
 	// It occurs because the CSysImageList class seems to not initialize 
@@ -8413,10 +8416,15 @@ void CToDoListWnd::ShowAllWindowHide()
 			CClientDC dc(this);
 			DrawStartupLoadPrompt(dc);
 		}
+		else if (m_bLongOpActive)
+		{
+			CClientDC dc(this);
+			DrawStartupLoadPrompt(dc, m_sLongOpMsg);
+		}
 	}
 }
 
-void CToDoListWnd::DrawStartupLoadPrompt(CDC& dc)
+void CToDoListWnd::DrawStartupLoadPrompt(CDC& dc, LPCTSTR szText)
 {
 	CRect rText;
 	GetClientRect(rText);
@@ -8434,7 +8442,8 @@ void CToDoListWnd::DrawStartupLoadPrompt(CDC& dc)
 
 	dc.SetBkMode(TRANSPARENT);
 	dc.SetTextColor(m_theme.crAppText);
-	dc.DrawText(CEnString(IDS_STARTUPPROGRESS), rText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	CEnString sPrompt(szText ? szText : (LPCTSTR)CEnString(IDS_STARTUPPROGRESS));
+	dc.DrawText(sPrompt, rText, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
 	if (pOldFont)
 		dc.SelectObject(pOldFont);
@@ -11937,10 +11946,29 @@ LRESULT CToDoListWnd::OnToDoCtrlDoLengthyOperation(WPARAM wParam, LPARAM lParam)
 	if (wParam) // start op
 	{
 		m_sbProgress.BeginProgress(m_statusBar, (LPCTSTR)lParam);
+
+		// 视图初始化是同步阻塞的，期间消息循环不会重绘。若放任旧视图留在屏幕上，
+		// 用户会对着冻结的半成品画面等待十几秒。先隐藏视图、当场画提示，
+		// 结束通知到达时再恢复，与启动加载的处理保持一致。
+		if (!m_bStartupLoading && !m_bLongOpActive && GetSafeHwnd() && IsWindowVisible())
+		{
+			m_sLongOpMsg = (LPCTSTR)lParam;
+			m_bLongOpActive = TRUE;
+			ShowAllWindowHide();
+		}
 	}
 	else // end op
 	{
 		m_sbProgress.EndProgress();
+
+		if (m_bLongOpActive)
+		{
+			m_bLongOpActive = FALSE;
+			m_sLongOpMsg.Empty();
+			ShowAllWindow();
+			Invalidate(TRUE);
+			UpdateWindow();
+		}
 	}
 	
 	return 0L;
